@@ -1,3 +1,4 @@
+param([switch]$LocalChecksOnly)
 $ErrorActionPreference = 'Stop'
 $releasePython = $env:WENYANTONG_PYTHON
 if (-not $releasePython) {
@@ -12,5 +13,7 @@ if (-not $releasePython) {
     }
 }
 if (-not $releasePython) { throw 'Install Python 3 or set WENYANTONG_PYTHON to its executable path.' }
-& $releasePython (Join-Path $PSScriptRoot 'publish.py')
+$publishArguments = @((Join-Path $PSScriptRoot 'publish.py'))
+if ($LocalChecksOnly) { $publishArguments += '--local-checks-only' }
+& $releasePython @publishArguments
 if ($LASTEXITCODE -ne 0) { throw 'Release was not published. Review the error above.' }

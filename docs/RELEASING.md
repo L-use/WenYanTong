@@ -21,6 +21,8 @@ git push origin main
 
 不要跳过 version.properties 或更新说明，也不要将旧 versionCode 用于新版本。应用以 versionCode 判断升级，不按字符串大小比较版本。
 
+云端执行器不可用时，可运行 `./tools/release/publish.ps1 -LocalChecksOnly`（跨平台：`python tools/release/publish.py --local-checks-only`）。此模式仍执行资源校验、单元测试、lint、正式签名与 APK 校验，只是不等待云端任务结果；不能据此声称 GitHub CI 已通过。当前首次发布采用完整本机校验，云端工作流等待执行器恢复可用。修改资源 JSON 后，应先运行资源构建器并提交生成的数据库与 manifest。
+
 ## 签名身份
 
 为兼容已分发的 0.1.0 初版，本项目 GitHub 渠道保留其签名身份，将私钥导入独立 PKCS12 发布密钥库并使用随机强口令。正式 release 构建关闭 debuggable。不要更换该身份，否则已安装用户不能正常覆盖升级。

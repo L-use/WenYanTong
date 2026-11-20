@@ -1,0 +1,41 @@
+{
+  "entries": [
+    {"id":"zhi","headword":"之","pinyin":"zhī","summary":"常见文言虚词，也可作动词。需结合上下文辨析。","senses":[
+      {"id":"zhi-pronoun","gloss":"代指前文提到的人、事或物。","pos":"代词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"},
+      {"id":"zhi-de","gloss":"用于定语和中心语之间，相当于“的”。","pos":"助词","example":"夫子之道，忠恕而已矣。","translation":"老师的道，不过是忠与恕罢了。","source":"《论语·里仁》4.15"},
+      {"id":"zhi-go","gloss":"到，往。","pos":"动词","example":"吾欲之南海，何如？","translation":"我想前往南海，你觉得怎样？","source":"彭端淑《为学一首示子侄》"},
+      {"id":"zhi-structure","gloss":"用于主语和谓语之间，取消句子独立性。","pos":"助词","example":"予独爱莲之出淤泥而不染。","translation":"我唯独喜爱莲花从淤泥中生长出来，却不沾染污秽。","source":"周敦颐《爱莲说》"}
+    ]},
+    {"id":"xue","headword":"学","pinyin":"xué","summary":"学习、求学。","senses":[{"id":"xue-learn","gloss":"学习，获取知识。","pos":"动词","example":"学而不思则罔，思而不学则殆。","translation":"学习却不思考就会迷惑，思考却不学习就会疑惑。","source":"《论语·为政》2.15"}]},
+    {"id":"shi","headword":"时","pinyin":"shí","summary":"时间；按时，时常。","senses":[{"id":"shi-often","gloss":"按一定的时候；时常。","pos":"副词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"}]},
+    {"id":"xi","headword":"习","pinyin":"xí","summary":"温习，练习。","senses":[{"id":"xi-review","gloss":"温习、反复练习所学的内容。","pos":"动词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"}]},
+    {"id":"yue","headword":"说","pinyin":"yuè / shuō","summary":"在“不亦说乎”中读 yuè，通“悦”。","senses":[{"id":"yue-happy","gloss":"通“悦”，愉快、高兴；此义读 yuè。","pos":"形容词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"}]},
+    {"id":"er","headword":"而","pinyin":"ér","summary":"连接词语或分句，具体关系由上下文决定。","senses":[{"id":"er-turn","gloss":"表示转折，可译为“却”。","pos":"连词","example":"人不知而不愠，不亦君子乎？","translation":"别人不了解自己，自己却不恼怒，不也是有修养的人吗？","source":"《论语·学而》1.1"},{"id":"er-sequence","gloss":"连接前后动作，可表承接。","pos":"连词","example":"温故而知新，可以为师矣。","translation":"温习旧的知识并获得新的理解，就可以做老师了。","source":"《论语·为政》2.11"}]},
+    {"id":"gu","headword":"故","pinyin":"gù","summary":"旧的事物或知识；原因等。","senses":[{"id":"gu-old","gloss":"旧的知识、已经学过的内容。","pos":"名词","example":"温故而知新，可以为师矣。","translation":"温习旧的知识并获得新的理解，就可以做老师了。","source":"《论语·为政》2.11"}]},
+    {"id":"zhi-know","headword":"知","pinyin":"zhī","summary":"知道，了解，理解。","senses":[{"id":"zhi-know-understand","gloss":"知道、了解。","pos":"动词","example":"知之为知之，不知为不知，是知也。","translation":"知道就承认知道，不知道就承认不知道，这才是明智的。","source":"《论语·为政》2.17"}]}
+  ],
+  "passages": [
+    {"id":"p1","original":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","direction":"CLASSICAL_TO_ZH","work":"《论语·学而》1.1","analysis":"这句话强调学习与温习相互配合的乐趣。“之”代指所学的内容；“说”读 yuè，通“悦”。“不亦……乎”构成反问语气。","entryIds":["xue","er","shi","xi","zhi","yue"]},
+    {"id":"p2","original":"温故而知新，可以为师矣。","translation":"温习旧的知识并获得新的理解，就可以做老师了。","direction":"CLASSICAL_TO_ZH","work":"《论语·为政》2.11","analysis":"“故”指旧的知识，“新”指新的认识。“温故”与“知新”连接，强调在复习中获得理解。","entryIds":["gu","er","zhi-know"]},
+    {"id":"p3","original":"学而不思则罔，思而不学则殆。","translation":"学习却不思考就会迷惑，思考却不学习就会疑惑。","direction":"CLASSICAL_TO_ZH","work":"《论语·为政》2.15","analysis":"前后两句形成对照，说明学习和思考需要相互配合。“而”在这里表示转折关系。","entryIds":["xue","er"]},
+    {"id":"p4","original":"人不知而不愠，不亦君子乎？","translation":"别人不了解自己，自己却不恼怒，不也是有修养的人吗？","direction":"CLASSICAL_TO_ZH","work":"《论语·学而》1.1","analysis":"“愠”是恼怒。“而”表示转折，“不亦……乎”用反问表达肯定。","entryIds":["zhi-know","er"]},
+    {"id":"p5","original":"知之为知之，不知为不知，是知也。","translation":"知道就承认知道，不知道就承认不知道，这才是明智的。","direction":"CLASSICAL_TO_ZH","work":"《论语·为政》2.17","analysis":"前面的“知”表示知道，两个“之”为代词。末尾“知”传统上常解释为通“智”，表示明智。","entryIds":["zhi-know","zhi"]},
+    {"id":"p6","original":"夫子之道，忠恕而已矣。","translation":"老师的道，不过是忠与恕罢了。","direction":"CLASSICAL_TO_ZH","work":"《论语·里仁》4.15","analysis":"“夫子”在这里指孔子；“之”连接定语与中心语，相当于“的”。","entryIds":["zhi","er"]},
+    {"id":"p7","original":"吾欲之南海，何如？","translation":"我想前往南海，你觉得怎样？","direction":"CLASSICAL_TO_ZH","work":"彭端淑《为学一首示子侄》","analysis":"“吾”意为我，“欲”意为想要。“之”后面接地点“南海”，在这里是动词，意为前往。","entryIds":["zhi"]},
+    {"id":"p8","original":"予独爱莲之出淤泥而不染。","translation":"我唯独喜爱莲花从淤泥中生长出来，却不沾染污秽。","direction":"CLASSICAL_TO_ZH","work":"周敦颐《爱莲说》","analysis":"“之”用于“莲”与“出淤泥而不染”之间，使整个结构成为“爱”的对象。“而”表示转折。","entryIds":["zhi","er"]},
+    {"id":"b1","original":"你好。","translation":"Hello.","direction":"ZH_TO_EN","work":"项目原创双语示例","analysis":"日常问候语。此例仅演示本地双语对照，不代表任意中英文翻译能力。","entryIds":[]},
+    {"id":"b2","original":"温故知新。","translation":"Review what you have learned to gain new insights.","direction":"ZH_TO_EN","work":"项目原创双语示例","analysis":"表达通过温习已有知识来获得新理解。","entryIds":[]}
+  ],
+  "questions": [
+    {"id":"q1","stem":"“学而时习之”中的“之”指什么？","options":["所学的内容","前往的地方","学习的时间","老师"],"answer":0,"explanation":"这里的“之”是代词，代指前文提到的所学内容。出处：《论语·学而》1.1。","entryId":"zhi"},
+    {"id":"q2","stem":"下列哪句中的“之”是动词，意为“前往”？","options":["学而时习之","夫子之道","吾欲之南海","莲之出淤泥而不染"],"answer":2,"explanation":"“之南海”表示前往南海；“之”后面接地点，作动词。出处：彭端淑《为学一首示子侄》。","entryId":"zhi"},
+    {"id":"q3","stem":"“夫子之道”中的“之”相当于现代汉语的哪个词？","options":["它","的","到","却"],"answer":1,"explanation":"“之”连接“夫子”与“道”，相当于“的”。出处：《论语·里仁》4.15。","entryId":"zhi"},
+    {"id":"q4","stem":"“莲之出淤泥而不染”中的“之”有什么作用？","options":["表示去往某地","代指莲花","表示转折","取消句子独立性"],"answer":3,"explanation":"“之”用于主语“莲”与谓语之间，使这一结构成为句子成分。出处：周敦颐《爱莲说》。","entryId":"zhi"},
+    {"id":"q5","stem":"“不亦说乎”中的“说”应读作什么？","options":["shuō","shuì","yuè","tuō"],"answer":2,"explanation":"此处“说”通“悦”，读 yuè，表示愉快。出处：《论语·学而》1.1。","entryId":"yue"},
+    {"id":"q6","stem":"“温故而知新”中的“故”指什么？","options":["所以","旧的知识","朋友","故乡"],"answer":1,"explanation":"“故”在此处指已经学过的旧知识。出处：《论语·为政》2.11。","entryId":"gu"},
+    {"id":"q7","stem":"“学而时习之”中的“习”最合适的解释是？","options":["温习、练习","习惯","飞行","停止"],"answer":0,"explanation":"“习”在这里表示反复温习、练习所学。出处：《论语·学而》1.1。","entryId":"xi"},
+    {"id":"q8","stem":"“人不知而不愠”中的“而”表示什么关系？","options":["并列","因果","转折","假设"],"answer":2,"explanation":"别人不了解自己，自己却不恼怒。“而”连接前后，表示转折。出处：《论语·学而》1.1。","entryId":"er"},
+    {"id":"q9","stem":"“学而时习之”中的“时”如何理解？","options":["时常、按一定的时候","当时的人","一个时辰","季节"],"answer":0,"explanation":"“时”在这里作副词，表示按一定的时候、时常。出处：《论语·学而》1.1。","entryId":"shi"},
+    {"id":"q10","stem":"“学而不思则罔，思而不学则殆”强调什么？","options":["只需思考","只需记忆","不必学习","学习与思考相互配合"],"answer":3,"explanation":"前后两句说明只学不思和只思不学都有不足。出处：《论语·为政》2.15。","entryId":"xue"}
+  ]
+}

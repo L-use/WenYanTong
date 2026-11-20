@@ -1,0 +1,39 @@
+name: Build release candidate
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: candidate-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Validate resources and build unsigned candidate
+        run: |
+          python tools/pack-builder/build.py
+          python tools/pack-builder/test_resources.py
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest lintRelease assembleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WenYanTong-unsigned-candidate-${{ github.ref_name }}
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/reports/lint-results-release.*
+            app/build/test-results/testDebugUnitTest/*.xml
+          retention-days: 14

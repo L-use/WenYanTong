@@ -1,0 +1,21 @@
+{
+  "id": "sample.basic",
+  "type": "sample",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "minAppVersion": "0.1.0",
+  "database": "sample.db",
+  "license": "CC0-1.0; public-domain ancient texts",
+  "source": "tools/pack-builder/sample.json",
+  "reviewStatus": "原创教学示例，未经学术审校",
+  "entryCount": 8,
+  "passageCount": 10,
+  "questionCount": 10,
+  "files": [
+    {
+      "path": "sample.db",
+      "sha256": "20d7e514daa262974ed35d763d49923cc051bace127da2e2b3b12ed337e75a15",
+      "bytes": 57344
+    }
+  ]
+}

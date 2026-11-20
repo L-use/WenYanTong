@@ -1,0 +1,28 @@
+WenYanTong 0.1.0
+
+Application code: MIT (see LICENSE).
+Original sample glosses, translations, analysis and questions in
+tools/pack-builder/sample.json: CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Ancient source text excerpts are public-domain works:
+- Lunyu / Analects: Xue Er 1.1; Wei Zheng 2.11, 2.15, 2.17; Li Ren 4.15.
+- Zhou Dunyi: Ai Lian Shuo.
+- Peng Duanshu: Wei Xue Yi Shou Shi Zi Zhi.
+No modern commercial edition, commentary, translation or font is bundled.
+Original project translations are instructional samples, not a reviewed edition.
+
+Third-party runtime components (resolved by Gradle):
+- AndroidX Core, Activity, Lifecycle, Navigation, Compose, Material 3:
+  Android Open Source Project, Apache License 2.0.
+  https://android.googlesource.com/platform/frameworks/support/
+- Kotlin standard library and kotlinx.coroutines:
+  JetBrains and contributors, Apache License 2.0.
+  https://github.com/JetBrains/kotlin
+  https://github.com/Kotlin/kotlinx.coroutines
+- Material icon vectors: Google, Apache License 2.0.
+  https://github.com/google/material-design-icons
+- Android SQLite APIs and org.json are provided by Android OS.
+- JUnit and AndroidX Test are test-only dependencies.
+
+Typeface uses Android's system fonts. App launcher vector is original project art.

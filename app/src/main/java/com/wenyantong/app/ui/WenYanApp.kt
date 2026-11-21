@@ -83,9 +83,9 @@ private val PagePadding = 24.dp
                 } }
             ) { padding ->
                 NavHost(nav,startDestination="home",modifier=Modifier.padding(padding)) {
-                    composable("home") { Home(state,vm,::lookup,{go(it)},{practice(emptyList())}) }
+                    composable("home") { Home(state,vm,::lookup,{if(it=="dictionary")vm.dictionaryFilter("");go(it)},{practice(emptyList())}) }
                     composable("result") { ResultPage(state,{nav.popBackStack()},{openEntry(it)},{practice(it)},{item->vm.favorite(item)}) }
-                    composable("dictionary") { DictionaryPage(state,{nav.popBackStack()},{openEntry(it)}) }
+                    composable("dictionary") { DictionaryPage(state,{nav.popBackStack()},{openEntry(it)},{vm.dictionaryFilter("")}) }
                     composable("classics") { LibraryPage(state,vm,{nav.popBackStack()},{ vm.openArticle(it);go("article") }) { lookup(it.original,it.direction) } }
                     composable("article") { ArticlePage(state) { nav.popBackStack() } }
                     composable("practice") { PracticeConfig(state,practiceScope,{go("wrong")}) { count ->
@@ -297,8 +297,11 @@ private val PagePadding = 24.dp
                     SectionTitle("对照版本与来源")
                     result.alternatives.forEach { alternative -> Paper {
                         Text(alternative.work,fontSize=14.sp)
-                        if(alternative.translation.isNotBlank()) Text(alternative.translation,fontSize=state.fontSize.sp)
-                        else Text("此来源仅提供原文，没有白话译文。",fontSize=13.sp)
+                        if(alternative.translation.isNotBlank()) {
+                            Text(alternative.translation,fontSize=state.fontSize.sp)
+                        } else {
+                            Text("此来源仅提供原文，没有白话译文。",fontSize=13.sp)
+                        }
                         var expanded by remember(alternative.id) { mutableStateOf(false) }
                         TextButton(onClick={expanded=!expanded}) { Text(if(expanded)"收起来源" else "查看完整来源") }
                         if(expanded) SelectionContainer { Text(alternative.sources.ifEmpty { listOf(alternative.work) }.joinToString("\n\n"),fontSize=12.sp,lineHeight=20.sp) }
@@ -365,17 +368,18 @@ private val PagePadding = 24.dp
                 }
             }
         }
-        if(entry.senses.size<entry.totalSenses) OutlinedButton(onClick=more) { Text("加载更多释义（已显示 ${entry.senses.size} 条）") }
+        if(entry.hasMore) OutlinedButton(onClick=more) { Text("加载更多释义（已显示 ${entry.senses.size} 条）") }
         MainButton("练习「${entry.headword}」的用法",onClick=practice)
     }
 }
 
-@Composable private fun DictionaryPage(state: AppState, back:()->Unit, onEntry:(Entry)->Unit) {
+@Composable private fun DictionaryPage(state: AppState, back:()->Unit, onEntry:(Entry)->Unit, global:()->Unit) {
     var search by rememberSaveable { mutableStateOf("") }
     Column {
         PageHeader("古汉语词典",back)
+        if(state.dictionaryFilter.isNotBlank()) TextButton(onClick=global) { Text("当前：${state.dictionaryFilter} · 搜索全部资源包") }
         OutlinedTextField(search,{search=it},Modifier.fillMaxWidth().padding(horizontal=24.dp),placeholder={Text("查找字词或释义")},leadingIcon={Icon(Icons.Outlined.Search,null)},singleLine=true,shape=Rounded)
-        val list=state.entries.filter { it.headword.contains(search) || it.summary.contains(search) || it.pinyin.contains(search,true) }
+        val list=state.entries.filter { (state.dictionaryFilter.isBlank() || state.dictionaryFilter in it.packs) && (it.headword.contains(search) || it.aliases.any { alias -> alias.contains(search) } || it.summary.contains(search) || it.pinyin.contains(search,true)) }
         LazyColumn(contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             item { Text("本地词典 · ${state.entries.size} 个词条",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant) }
             items(list,key={it.id}) { e ->
@@ -564,7 +568,7 @@ private val PagePadding = 24.dp
             Text("已下载 ${state.installedPacks.size} 个包 · 全局查词 ${state.entries.size} 个不同字词\n内置示例始终可用；原文包不提供白话译文。",fontSize=13.sp,lineHeight=23.sp)
             Button(onClick={if(state.mode==Mode.OFFLINE)consent=true else vm.checkResources()},enabled=!state.resourceBusy,modifier=Modifier.fillMaxWidth()) { Text("检查资源更新") }
             Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick={go("dictionary")}) { Text("全局查词") }
+                OutlinedButton(onClick={vm.dictionaryFilter("");go("dictionary")}) { Text("全局查词") }
                 OutlinedButton(onClick={vm.loadArticles();go("classics")}) { Text("浏览古文") }
             }
             if(state.resourceBusy) {
@@ -577,8 +581,9 @@ private val PagePadding = 24.dp
             state.installedPacks.filter { installed -> offers.none { it.id==installed.id } }.forEach { pack -> Paper {
                 Text(pack.title,fontSize=18.sp);Text("已安装 ${pack.version} · ${pack.entries} 字词 · ${pack.articles} 篇章",fontSize=13.sp)
                 Text(pack.review,fontSize=12.sp,lineHeight=20.sp)
-                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick={vm.loadArticles(pack.id);go("classics")}) { Text("浏览此包") }
+                FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    if(pack.entries>0) OutlinedButton(onClick={vm.dictionaryFilter(pack.title);go("dictionary")}) { Text("查看词条") }
+                    if(pack.articles>0) OutlinedButton(onClick={vm.loadArticles(pack.id);go("classics")}) { Text("浏览此包") }
                     TextButton(onClick={remove=pack},enabled=!state.resourceBusy) { Text("删除") }
                 }
             } }
@@ -590,10 +595,11 @@ private val PagePadding = 24.dp
                     Text("${offer.entryCount} 字词 · ${offer.articleCount} 篇章",fontSize=13.sp)
                     Text(offer.notes,fontSize=14.sp,lineHeight=23.sp)
                     if(offer.review.isNotBlank()) Text(offer.review,fontSize=12.sp,lineHeight=20.sp,color=MaterialTheme.colorScheme.primary)
-                    if(installed==null || installed.revision<offer.revision) Button(onClick={vm.downloadResource(offer)},enabled=!state.resourceBusy) { Text(if(installed==null)"下载此包" else "更新此包") }
+                    if(installed==null || installed.revision<offer.revision) Button(onClick={vm.downloadResource(offer)},enabled=!state.resourceBusy && offer.minApp<=BuildConfig.VERSION_CODE) { Text(if(offer.minApp>BuildConfig.VERSION_CODE)"需先升级应用" else if(installed==null)"下载此包" else "更新此包") }
                     else Text("已安装 · ${installed.version}",color=MaterialTheme.colorScheme.primary)
-                    if(installed!=null) Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick={vm.loadArticles(offer.id);go("classics")}) { Text("浏览此包") }
+                    if(installed!=null) FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        if(offer.entryCount>0) OutlinedButton(onClick={vm.dictionaryFilter(offer.title);go("dictionary")}) { Text("查看词条") }
+                        if(offer.articleCount>0) OutlinedButton(onClick={vm.loadArticles(offer.id);go("classics")}) { Text("浏览此包") }
                         TextButton(onClick={remove=installed},enabled=!state.resourceBusy) { Text("删除") }
                     }
                 }

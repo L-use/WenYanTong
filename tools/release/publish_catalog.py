@@ -14,10 +14,10 @@ def output(*args):return subprocess.check_output([str(x) for x in args],cwd=ROOT
 
 def collect():
     collection=ROOT/'dist/resources/user-collection'
-    files=[ROOT/'dist/resources/common-basic-1.0.0.zip',ROOT/'dist/resources/shuowen/shuowen-dictionary-1.0.0.zip']
+    files=sorted((ROOT/'dist/resources').glob('common-basic-*.zip'))+sorted((ROOT/'dist/resources/shuowen').glob('shuowen-dictionary-*.zip'))
     files+=sorted(collection.glob('*/*.zip'))
-    if len(files)!=8:raise SystemExit('Expected the basic library, Shuowen and six validated collection packs')
-    packs=[]
+    if not files:raise SystemExit('No locally built packages found')
+    selected={}
     for archive in files:
         with zipfile.ZipFile(archive) as zipped:
             if set(zipped.namelist())!={'manifest.json','sample.db'}:raise SystemExit('Invalid package contents')
@@ -33,16 +33,18 @@ def collect():
             sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),minAppVersionCode=4,
             entryCount=m['entryCount'],articleCount=m.get('articleCount',0),notes=notes,
             license=m['license'],reviewStatus=m.get('reviewStatus',''))
-        packs.append((item,archive))
-    if len({p['id'] for p,_ in packs})!=len(packs):raise SystemExit('Duplicate resource IDs')
-    return packs
+        previous=selected.get(item['id'])
+        if previous and previous[0]['revision']==item['revision'] and previous[0]['sha256']!=item['sha256']:
+            raise SystemExit('Same resource revision has different contents: '+item['id'])
+        if not previous or previous[0]['revision']<item['revision']:selected[item['id']]=(item,archive)
+    return list(selected.values())
 
 def main(local_only=False):
     packs=collect()
     catalog=ROOT/'dist/resources/catalog-v2.json'
     catalog.write_text(json.dumps(dict(schemaVersion=2,packs=[p for p,_ in packs]),ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     if local_only:
-        print('Catalog validated locally: 8 independent packs');return
+        print(f'Catalog validated locally: {len(packs)} independent packs');return
     if output('git','status','--porcelain'):raise SystemExit('Commit source changes before publishing')
     run('git','push','origin','main')
     for item,archive in packs:
@@ -61,7 +63,7 @@ def main(local_only=False):
     if existing.returncode:
         run('gh','release','create','resources-v2',stable,'--repo',REPO,'--target','main','--latest=false','--title','独立资源包目录','--notes','每个资源包独立安装、更新和删除；多包客户端使用此索引。')
     else:run('gh','release','upload','resources-v2',stable,'--repo',REPO,'--clobber')
-    print('Published eight independent packages and resources-v2 catalog.')
+    print(f'Published {len(packs)} independent packages and resources-v2 catalog.')
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--local-only',action='store_true')

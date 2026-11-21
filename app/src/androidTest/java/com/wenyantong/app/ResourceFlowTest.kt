@@ -42,22 +42,32 @@ class ResourceFlowTest {
         compose.onNodeWithText("检查资源更新").performScrollTo().performClick()
         compose.onNodeWithText("允许检查").performClick()
         compose.waitUntil(60_000) { compose.onAllNodesWithTag("resource-reading.guwenguanzhi").fetchSemanticsNodes().isNotEmpty() }
+        if(compose.onAllNodes(hasText("下载此包") and hasAnyAncestor(hasTestTag("resource-reading.guwenguanzhi"))).fetchSemanticsNodes().isEmpty()) {
+            compose.onNode(hasText("删除") and hasAnyAncestor(hasTestTag("resource-reading.guwenguanzhi"))).performScrollTo().performClick()
+            compose.onNodeWithText("删除此包").performClick()
+            compose.waitUntil(30_000) { compose.onAllNodes(hasText("下载此包") and hasAnyAncestor(hasTestTag("resource-reading.guwenguanzhi"))).fetchSemanticsNodes().isNotEmpty() }
+        }
         compose.onNode(hasText("下载此包") and hasAnyAncestor(hasTestTag("resource-reading.guwenguanzhi"))).performScrollTo().performClick()
         compose.waitUntil(120_000) { compose.onAllNodesWithText("资源包安装成功，已加入全局搜索。").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("全局查词").performScrollTo().performClick()
         compose.onNode(hasSetTextAction()).performTextInput("学者")
         compose.onNodeWithContentDescription("查看学者的释义").performScrollTo().performClick()
-        compose.onAllNodesWithText("查看完整来源").onFirst().performClick()
+        compose.onAllNodesWithText("查看完整来源").onFirst().performScrollTo().performClick()
         compose.onAllNodesWithText("上游 AI 生成",substring=true).onFirst().assertExists()
         compose.onNodeWithContentDescription("关闭释义").performScrollTo().performClick()
         compose.onNodeWithContentDescription("返回").performClick()
         compose.onNode(hasText("浏览此包") and hasAnyAncestor(hasTestTag("resource-reading.guwenguanzhi"))).performScrollTo().performClick()
-        compose.waitUntil(20_000) { compose.onAllNodesWithText("加载更多篇目").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(20_000) { compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty() }
         compose.onNode(hasSetTextAction()).performTextInput("师说")
         compose.waitUntil(20_000) { compose.onAllNodesWithText("师说").fetchSemanticsNodes().size>1 }
-        compose.onNode(hasText("师说") and hasClickAction()).performClick()
+        compose.onNode(hasText("师说") and hasClickAction() and !hasSetTextAction()).performClick()
         compose.waitUntil(20_000) { compose.onAllNodesWithText("古文阅读").fetchSemanticsNodes().isNotEmpty() }
         compose.onAllNodesWithText("古之学者必有师",substring=true).onFirst().assertExists()
+        val instrumentation=InstrumentationRegistry.getInstrumentation()
+        val folder=File(instrumentation.targetContext.getExternalFilesDir(null),"screenshots").apply { mkdirs() }
+        compose.waitForIdle()
+        val bitmap=requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+        File(folder,"16-multipack-article.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it) };bitmap.recycle()
     }
     private fun openResources() {
         compose.waitUntil(15_000) { compose.onAllNodesWithText("开始探索").fetchSemanticsNodes().isNotEmpty() }

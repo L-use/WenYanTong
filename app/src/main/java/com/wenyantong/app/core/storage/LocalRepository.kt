@@ -74,7 +74,7 @@ class LocalRepository(private val context: Context) {
     private fun mergeEntries(rows: List<Entry>, limit: Int): List<Entry> = rows.groupBy { it.headword }.values.map { items ->
         val first=items.first()
         val senses=items.flatMap { it.senses }.groupBy { listOf(it.gloss,it.pos,it.example,it.translation) }.values.map { same -> same.first().copy(source=same.map { it.source }.distinct().joinToString("\n\n")) }
-        first.copy(packs=items.flatMap { it.packs }.distinct(),linkedIds=items.flatMap { it.linkedIds }.distinct(),senses=senses.take(limit),totalSenses=items.sumOf { it.totalSenses })
+        first.copy(packs=items.flatMap { it.packs }.distinct(),linkedIds=items.flatMap { it.linkedIds }.distinct(),senses=senses.take(limit),totalSenses=items.sumOf { it.totalSenses },hasMore=items.any { it.hasMore } || senses.size>limit,aliases=items.flatMap { it.aliases }.distinct())
     }
     suspend fun entryDetails(word: String, limit: Int=30): Entry? = withContext(Dispatchers.IO) {
         synchronized(resourceLock) { mergeEntries(baseEntries().filter { it.headword==word }+libraries.details(word,limit),limit).firstOrNull() }

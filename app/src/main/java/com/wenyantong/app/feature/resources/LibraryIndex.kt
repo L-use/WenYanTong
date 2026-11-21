@@ -22,8 +22,10 @@ class LibraryIndex {
     }
     fun close() { libraries.forEach { it.db.close() };libraries=emptyList() }
     fun previews(): List<Entry> = libraries.flatMap { lib ->
+        val aliases=mutableMapOf<String,MutableList<String>>()
+        lib.db.rawQuery("SELECT entry_id,alias FROM dict_alias",null).use { c -> while(c.moveToNext())aliases.getOrPut(c.getString(0)) { mutableListOf() }.add(c.getString(1)) }
         lib.db.rawQuery("SELECT id,headword,pinyin,substr(summary,1,250),(SELECT COUNT(*) FROM dict_sense s WHERE s.entry_id=e.id) FROM dict_entry e ORDER BY rowid",null).use { c ->
-            buildList { while(c.moveToNext())add(Entry(c.getString(0),c.getString(1),c.getString(2),c.getString(3),emptyList(),listOf(lib.title),totalSenses=c.getInt(4))) }
+            buildList { while(c.moveToNext())add(Entry(c.getString(0),c.getString(1),c.getString(2),c.getString(3),emptyList(),listOf(lib.title),totalSenses=c.getInt(4),aliases=aliases[c.getString(0)].orEmpty())) }
         }
     }
     private fun source(lib: Library,type: String,id: String): String {
@@ -41,7 +43,7 @@ class LibraryIndex {
                 buildList { while(s.moveToNext()) add(Sense(s.getString(0),s.getString(1),s.getString(2),s.getString(3),s.getString(4),s.getString(5)+"\n"+source(lib,"dict_sense",s.getString(0)))) }
             }
             val count=lib.db.rawQuery("SELECT COUNT(*) FROM dict_sense WHERE entry_id=?",arrayOf(id)).use { it.moveToFirst();it.getInt(0) }
-            Entry(id,c.getString(1),c.getString(2),c.getString(3),senses,listOf(lib.title),totalSenses=count)
+            Entry(id,c.getString(1),c.getString(2),c.getString(3),senses,listOf(lib.title),totalSenses=count,hasMore=count>limit)
         }
     }
     fun aliases(word: String): List<Entry> = libraries.flatMap { lib ->

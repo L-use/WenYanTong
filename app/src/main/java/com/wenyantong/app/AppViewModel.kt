@@ -36,7 +36,7 @@ data class AppState(
     val resourceCatalog: List<com.wenyantong.app.feature.resources.ResourceOffer> = emptyList(),
     val installedPacks: List<com.wenyantong.app.feature.resources.InstalledPack> = emptyList(),
     val articlePack: String="", val articleQuery: String="", val articles: List<LibraryArticle> = emptyList(),
-    val articleText: ArticleText?=null, val articleBusy: Boolean=false, val articleMore: Boolean=true,
+    val articleText: ArticleText?=null, val articleBusy: Boolean=false, val articleMore: Boolean=true, val dictionaryFilter: String="",
     val storage: StorageUiState = StorageUiState()
 )
 
@@ -66,6 +66,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun input(text: String) { mutable.update { it.copy(input=text.take(2000)) } }
+    fun dictionaryFilter(title: String) { mutable.update { it.copy(dictionaryFilter=title) } }
     fun direction(direction: Direction) { mutable.update { it.copy(direction=direction) } }
     fun mode(mode: Mode) { repo.setMode(mode);mutable.update { it.copy(mode=mode) };maybeCheckUpdate() }
     fun reading(theme: String, font: Float) { repo.setReading(theme,font);mutable.update { it.copy(theme=theme,fontSize=font) } }

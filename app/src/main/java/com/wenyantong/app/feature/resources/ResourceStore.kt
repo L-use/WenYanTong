@@ -87,7 +87,7 @@ class ResourceStore(private val context: Context, private val transport: UpdateT
         require(offer.version.matches(Regex("[0-9]+\\.[0-9]+\\.[0-9]+")) && offer.revision>0)
         require(offer.tag.matches(Regex("[a-zA-Z0-9.-]{1,100}")))
         require(offer.bytes in 1..MAX_DOWNLOAD && offer.sha256.matches(Regex("[a-f0-9]{64}")))
-        require(offer.minApp in 1..BuildConfig.VERSION_CODE && offer.notes.length<=10000) { "请先更新应用。" }
+        require(offer.minApp>=1 && offer.notes.length<=10000)
         require(UpdatePolicy.releaseAsset(offer.url,repository,offer.tag) && offer.url.endsWith(".zip")) { "资源下载来源不可信。" }
     }
     suspend fun check(): ResourceOffer = withContext(Dispatchers.IO) {
@@ -105,6 +105,7 @@ class ResourceStore(private val context: Context, private val transport: UpdateT
     }
     suspend fun download(offer: ResourceOffer, progress: (Long)->Unit): File = withContext(Dispatchers.IO) {
         validateOffer(offer)
+        require(offer.minApp<=BuildConfig.VERSION_CODE) { "请先更新应用，再下载此包。" }
         val target=File(context.cacheDir,"resource-${UUID.randomUUID()}.zip")
         try {
             transport.open(offer.url).use { input -> target.outputStream().use { output ->

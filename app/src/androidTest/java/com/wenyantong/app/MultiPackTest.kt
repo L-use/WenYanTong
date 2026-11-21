@@ -59,4 +59,19 @@ class MultiPackTest {
             assertTrue(repo.history().any { it.query=="測" })
         } finally { repo.close();prefs.edit().clear().putString("installed",old).putString("active",legacy).commit() }
     }
+    @Test fun legacySinglePackMigratesAndDoesNotReturnAfterRemoval() = runBlocking {
+        val prefs=context.getSharedPreferences("resource_updates",0)
+        val old=prefs.getString("installed",null);val active=prefs.getString("active",null)
+        val folder=File(context.filesDir,"resources/installed-${java.util.UUID.randomUUID()}").apply { mkdirs() }
+        context.assets.open("packs/sample.db").use { input -> File(folder,"sample.db").outputStream().use { input.copyTo(it) } }
+        val m=JSONObject(context.assets.open("packs/manifest.json").bufferedReader().use { it.readText() }).put("revision",1).put("version","1.0.0").put("minAppVersionCode",3)
+        File(folder,"manifest.json").writeText(m.toString())
+        val repo=LocalRepository(context)
+        try {
+            prefs.edit().clear().putString("active",folder.name).commit();repo.initialize()
+            assertEquals("1.0.0",repo.manifest.getString("version"));assertEquals(1,repo.installedPacks().size)
+            repo.removeResource("sample.basic");repo.initialize()
+            assertTrue(repo.installedPacks().isEmpty());assertEquals("0.1.0",repo.manifest.getString("version"))
+        } finally { repo.close();prefs.edit().clear().putString("installed",old).putString("active",active).commit() }
+    }
 }

@@ -39,8 +39,9 @@ class AiSettingsStore(context: Context) {
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build())
         }.generateKey()
     }
-    fun settings()=AiSettings(runCatching { AiProtocol.valueOf(prefs.getString("protocol","COMPATIBLE")!!) }.getOrDefault(AiProtocol.COMPATIBLE),prefs.getString("base","") ?: "",prefs.getString("model","") ?: "",prefs.contains("encrypted_key"))
-    fun save(settings: AiSettings,newKey: String) {
+    @Synchronized fun settings()=AiSettings(runCatching { AiProtocol.valueOf(prefs.getString("protocol","COMPATIBLE")!!) }.getOrDefault(AiProtocol.COMPATIBLE),prefs.getString("base","") ?: "",prefs.getString("model","") ?: "",prefs.contains("encrypted_key"))
+    @Synchronized fun credentials(): Pair<AiSettings,String> = settings() to secret()
+    @Synchronized fun save(settings: AiSettings,newKey: String) {
         AiPolicy.validate(settings)
         val old=settings()
         require(newKey.isNotBlank() || (old.hasKey && old.protocol==settings.protocol && old.baseUrl==settings.baseUrl)) { "新渠道必须填写对应 API Key，不能沿用另一地址的密钥。" }
@@ -52,7 +53,7 @@ class AiSettingsStore(context: Context) {
         }
         check(edit.commit()) { "AI 设置保存失败。" }
     }
-    fun secret(): String {
+    @Synchronized fun secret(): String {
         try {
             val encoded=prefs.getString("encrypted_key",null) ?: error("请先在设置中配置 API Key。")
             val iv=Base64.decode(prefs.getString("iv","")!!,Base64.NO_WRAP)
@@ -60,5 +61,5 @@ class AiSettingsStore(context: Context) {
             return cipher.doFinal(Base64.decode(encoded,Base64.NO_WRAP)).toString(Charsets.UTF_8)
         } catch(e: Exception) { throw IllegalStateException("AI 密钥不可读取，请在设置中重新填写。") }
     }
-    fun clear() { check(prefs.edit().clear().commit()) }
+    @Synchronized fun clear() { check(prefs.edit().clear().commit()) }
 }

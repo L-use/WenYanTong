@@ -89,8 +89,8 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
                 if(needsAi && settings.hasKey) {
                     mutable.update { it.copy(aiNotice="正在结合本地词义请求 AI…") }
                     try {
-                        val secret=withContext(Dispatchers.IO) { aiStore.secret() }
-                        val generated=ai.translate(settings,secret,local)
+                        val credentials=withContext(Dispatchers.IO) { aiStore.credentials() }
+                        val generated=ai.translate(credentials.first,credentials.second,local)
                         mutable.update { it.copy(result=local.copy(passage=generated,alternatives=listOf(generated)+local.alternatives),busy=false,aiNotice="AI 生成参考；本地词条与来源仍保留。") }
                     } catch(cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
                     catch(e: Exception) { mutable.update { it.copy(result=local,busy=false,aiNotice="AI 补充未完成："+aiError(e)) } }
@@ -120,8 +120,8 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
                     val context=previews.take(6).mapNotNull { repo.entryDetails(it.headword,3) }.filter { it.senses.isNotEmpty() }
                     check(context.isNotEmpty()) { "当前结果没有可依据的词条，请先查词或选择已收录内容。" }
                     mutable.update { it.copy(practiceNotice="AI 正在根据当前结果与本地词义出题…") }
-                    val secret=withContext(Dispatchers.IO) { aiStore.secret() }
-                    ai.generate(settings,secret,result,context,count).also { repo.saveGenerated(it,result?.query.orEmpty()) }
+                    val credentials=withContext(Dispatchers.IO) { aiStore.credentials() }
+                    ai.generate(credentials.first,credentials.second,result,context,count).also { repo.saveGenerated(it,result?.query.orEmpty()) }
                 } else repo.questions(entryIds,wrongOnly).shuffled().take(count)
                 sessionId=UUID.randomUUID().toString()
                 mutable.update { it.copy(questions=questions,answers=emptyList(),questionIndex=0,submitted=false,selected=null,savingAnswer=false,practiceFinished=false,practiceBusy=false,practiceNotice=if(useAi)"AI 题目已生成并保存，可结合原词条核对。" else "",error=null) }
@@ -154,9 +154,9 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
         aiSettingsJob=viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) { aiStore.save(settings,key) }
-                val saved=aiStore.settings();val secret=withContext(Dispatchers.IO) { aiStore.secret() }
-                val message=ai.test(saved,secret)
-                mutable.update { it.copy(aiSettings=saved,aiBusy=false,aiNotice=message) }
+                val credentials=withContext(Dispatchers.IO) { aiStore.credentials() }
+                val message=ai.test(credentials.first,credentials.second)
+                mutable.update { it.copy(aiSettings=credentials.first,aiBusy=false,aiNotice=message) }
             } catch(e: Exception) { mutable.update { it.copy(aiSettings=aiStore.settings(),aiBusy=false,aiNotice=aiError(e)) } }
         }
     }

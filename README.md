@@ -62,7 +62,7 @@ python tools/pack-builder/build.py
 
 `app/src/test` 覆盖文本标准化、精确命中边界、判分边界。`app/src/androidTest` 覆盖真实 SQLite、反向查询、收藏错题持久化、无网络权限与 Compose 学习流程。设备测试：`gradlew.bat :app:connectedDebugAndroidTest`。
 
-0.1.0 初版的历史验证记录见 `docs/VALIDATION.md`；0.2.0 的发布与新增功能验证另见 `docs/VALIDATION_0.2.0.md`。实际截图和本机构建日志在被 Git 排除的 `dist/`。尚未进行真机、多系统版本与横屏验证。
+0.1.0 初版的历史验证记录见 `docs/VALIDATION.md`；0.2.0 和 0.3.0 验证分别见 `docs/VALIDATION_0.2.0.md`、`docs/VALIDATION_0.3.0.md`。实际截图和本机构建日志在被 Git 排除的 `dist/`。尚未进行物理真机、多系统版本与横屏验证。
 
 架构与阶段记录见 `docs/ARCHITECTURE.md`、`docs/CHANGELOG.md`、`docs/TEST_PLAN.md`。下一阶段可继续扩充资源内容与多包支持，再接入 AI。
 

@@ -16,6 +16,7 @@ def collect():
     collection=ROOT/'dist/resources/user-collection'
     files=sorted((ROOT/'dist/resources').glob('common-basic-*.zip'))+sorted((ROOT/'dist/resources/shuowen').glob('shuowen-dictionary-*.zip'))
     files+=sorted(collection.glob('*/*.zip'))
+    files+=sorted((ROOT/'dist/resources/english').glob('*/*.zip'))
     if not files:raise SystemExit('No locally built packages found')
     selected={}
     for archive in files:
@@ -28,11 +29,14 @@ def collect():
         tag=f'resource-{m["version"]}' if basic else f'pack-{m["id"]}-{m["version"]}'
         title=m.get('title','常用文言文基础库')
         notes=m.get('description',f'{m["entryCount"]} 个字词；基础古文对照及单选题。')
+        identity=m['id']
+        category='vocabulary' if identity.startswith('english.') else 'dictionary' if identity.startswith('dictionary.') else 'reading' if identity.startswith('reading.') else 'original' if identity.startswith('corpus.') else 'basic'
         item=dict(id=m['id'],title=title,version=m['version'],revision=m['revision'],tag=tag,
             url=f'https://github.com/{REPO}/releases/download/{tag}/{archive.name}',bytes=archive.stat().st_size,
             sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),minAppVersionCode=4,
             entryCount=m['entryCount'],articleCount=m.get('articleCount',0),notes=notes,
-            license=m['license'],reviewStatus=m.get('reviewStatus',''))
+            license=m['license'],reviewStatus=m.get('reviewStatus',''),language='en' if m.get('language','').startswith('en') else 'zh',category=category,
+            nonCommercial=m.get('nonCommercial',False),shareAlike=m.get('shareAlike',False))
         previous=selected.get(item['id'])
         if previous and previous[0]['revision']==item['revision'] and previous[0]['sha256']!=item['sha256']:
             raise SystemExit('Same resource revision has different contents: '+item['id'])

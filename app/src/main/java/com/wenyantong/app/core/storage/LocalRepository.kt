@@ -120,7 +120,11 @@ class LocalRepository(private val context: Context) {
         val reverse = forward != direction
         val hit = candidates.firstOrNull { it.direction == forward && TextRules.matches(if (reverse) it.translation else it.original, text) }
         val match = hit?.let { if (reverse) it.copy(original=it.translation,translation=it.original,direction=direction) else it }
-        val found = if (direction in listOf(Direction.CLASSICAL_TO_ZH,Direction.ZH_TO_CLASSICAL)) {
+        val found = if (direction==Direction.EN_TO_ZH) {
+            entries().filter { e -> e.headword.equals(text.trim(),true) || e.aliases.any { it.equals(text.trim(),true) } }
+        } else if (direction==Direction.ZH_TO_EN) {
+            entries().filter { e -> e.headword.any { it in 'a'..'z' || it in 'A'..'Z' } && e.summary.contains(text.trim()) }.take(12)
+        } else if (direction in listOf(Direction.CLASSICAL_TO_ZH,Direction.ZH_TO_CLASSICAL)) {
             entries().filter { e -> e.linkedIds.any { it in (hit?.entryIds ?: emptyList()) } || (direction == Direction.CLASSICAL_TO_ZH && text.contains(e.headword)) }
                 .sortedByDescending { it.headword.length }
         } else emptyList()
@@ -151,13 +155,27 @@ class LocalRepository(private val context: Context) {
     suspend fun deleteHistory(id: Long) = withContext(Dispatchers.IO) { personal.writableDatabase.delete("history","id=?",arrayOf(id.toString())) }
     suspend fun questions(entryIds: Set<String> = emptySet(), wrongOnly: Boolean = false): List<Question> = withContext(Dispatchers.IO) {
         val wrongIds = wrongIds()
-        synchronized(resourceLock) { resource.rawQuery("SELECT id,stem,options_json,answer,explanation,entry_id FROM question ORDER BY rowid",null).use { c ->
+        val local=synchronized(resourceLock) { resource.rawQuery("SELECT id,stem,options_json,answer,explanation,entry_id FROM question ORDER BY rowid",null).use { c ->
             buildList { while(c.moveToNext()) {
                 val q = Question(c.getString(0),c.getString(1),JSONArray(c.getString(2)).strings(),c.getInt(3),c.getString(4),c.getString(5))
                 if ((entryIds.isEmpty() || q.entryId in entryIds) && (!wrongOnly || q.id in wrongIds)) add(q)
             } }
         }
         }
+        val generated=generatedQuestions().filter { (entryIds.isEmpty() || it.entryId in entryIds) && (!wrongOnly || it.id in wrongIds) }
+        (local+generated).distinctBy { it.id }
+    }
+    private fun generatedQuestions(): List<Question> = personal.readableDatabase.rawQuery("SELECT id,stem,options_json,answer,explanation,entry_id FROM generated_question ORDER BY created_at DESC",null).use { c ->
+        buildList { while(c.moveToNext())add(Question(c.getString(0),c.getString(1),JSONArray(c.getString(2)).strings(),c.getInt(3),c.getString(4),c.getString(5))) }
+    }
+    suspend fun saveGenerated(questions: List<Question>, query: String) = withContext(Dispatchers.IO) {
+        val db=personal.writableDatabase;db.beginTransaction()
+        try { insertGenerated(db,questions,query);db.setTransactionSuccessful() } finally { db.endTransaction() }
+    }
+    private fun insertGenerated(db: SQLiteDatabase,questions: List<Question>,query: String) {
+        questions.forEach { q -> db.insertWithOnConflict("generated_question",null,ContentValues().apply {
+            put("id",q.id);put("stem",q.stem);put("options_json",JSONArray(q.options).toString());put("answer",q.answer);put("explanation",q.explanation);put("entry_id",q.entryId);put("created_at",System.currentTimeMillis());put("context_query",query.take(2000))
+        },SQLiteDatabase.CONFLICT_IGNORE) }
     }
     private fun wrongIds(): Set<String> = personal.readableDatabase.rawQuery("SELECT question_id FROM wrong_question WHERE mastered=0",null).use { c ->
         buildSet { while(c.moveToNext()) add(c.getString(0)) }
@@ -192,7 +210,7 @@ class LocalRepository(private val context: Context) {
             val wrong=db.rawQuery("SELECT question_id,count,mastered FROM wrong_question ORDER BY question_id",null).use { c ->
                 buildList { while(c.moveToNext()) add(BackupWrong(c.getString(0),c.getInt(1),c.getInt(2)==1)) }
             }
-            UserBackup(history,answers,wrong,BackupPreferences(mode(),theme(),fontSize(),context.getSharedPreferences("app_updates",Context.MODE_PRIVATE).getBoolean("auto",true)))
+            UserBackup(history,answers,wrong,BackupPreferences(mode(),theme(),fontSize(),context.getSharedPreferences("app_updates",Context.MODE_PRIVATE).getBoolean("auto",true)),generatedQuestions())
         } finally { db.endTransaction() }
         UserBackupCodec.encode(snapshot)
     }
@@ -202,6 +220,7 @@ class LocalRepository(private val context: Context) {
         val db=personal.writableDatabase
         db.beginTransaction()
         try {
+            insertGenerated(db,checked.generated,"")
             checked.history.forEach { row ->
                 db.execSQL("UPDATE history SET timestamp=MAX(timestamp,?),favorite=MAX(favorite,?) WHERE query=? AND direction=?",arrayOf(row.timestamp,if(row.favorite)1 else 0,row.query,row.direction.name))
                 db.insertWithOnConflict("history",null,ContentValues().apply { put("query",row.query);put("direction",row.direction.name);put("timestamp",row.timestamp);put("favorite",if(row.favorite)1 else 0) },SQLiteDatabase.CONFLICT_IGNORE)
@@ -229,11 +248,15 @@ class LocalRepository(private val context: Context) {
 
 private fun JSONArray.strings() = (0 until length()).map { getString(it) }
 
-private class PersonalDatabase(context: Context) : SQLiteOpenHelper(context,"personal.db",null,1) {
+private class PersonalDatabase(context: Context) : SQLiteOpenHelper(context,"personal.db",null,2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE history(id INTEGER PRIMARY KEY AUTOINCREMENT,query TEXT NOT NULL,direction TEXT NOT NULL,timestamp INTEGER NOT NULL,favorite INTEGER NOT NULL DEFAULT 0,UNIQUE(query,direction))")
         db.execSQL("CREATE TABLE practice_answer(session_id TEXT NOT NULL,question_id TEXT NOT NULL,choice INTEGER NOT NULL,correct INTEGER NOT NULL,timestamp INTEGER NOT NULL,PRIMARY KEY(session_id,question_id))")
         db.execSQL("CREATE TABLE wrong_question(question_id TEXT PRIMARY KEY,count INTEGER NOT NULL,mastered INTEGER NOT NULL DEFAULT 0)")
+        createGenerated(db)
     }
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) { error("Missing personal database migration: $oldVersion → $newVersion") }
+    private fun createGenerated(db: SQLiteDatabase) { db.execSQL("CREATE TABLE generated_question(id TEXT PRIMARY KEY,stem TEXT NOT NULL,options_json TEXT NOT NULL,answer INTEGER NOT NULL,explanation TEXT NOT NULL,entry_id TEXT NOT NULL,created_at INTEGER NOT NULL,context_query TEXT NOT NULL)") }
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        check(oldVersion==1 && newVersion==2) { "不支持的用户数据库迁移。" };createGenerated(db)
+    }
 }

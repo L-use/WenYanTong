@@ -43,7 +43,7 @@ class LibraryIndex {
                 buildList { while(s.moveToNext()) add(Sense(s.getString(0),s.getString(1),s.getString(2),s.getString(3),s.getString(4),s.getString(5)+"\n"+source(lib,"dict_sense",s.getString(0)))) }
             }
             val count=lib.db.rawQuery("SELECT COUNT(*) FROM dict_sense WHERE entry_id=?",arrayOf(id)).use { it.moveToFirst();it.getInt(0) }
-            Entry(id,c.getString(1),c.getString(2),c.getString(3),senses,listOf(lib.title),totalSenses=count,hasMore=count>limit)
+            Entry(id,c.getString(1),c.getString(2),c.getString(3),senses,listOf(lib.title),totalSenses=count,hasMore=count>limit,aliases=listOf(word))
         }
     }
     fun aliases(word: String): List<Entry> = libraries.flatMap { lib ->

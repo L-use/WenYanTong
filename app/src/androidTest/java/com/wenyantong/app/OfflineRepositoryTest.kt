@@ -11,6 +11,15 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class OfflineRepositoryTest {
+    private var installed: String?=null
+    private var active: String?=null
+    @org.junit.Before fun useBundledFixture() {
+        val p=InstrumentationRegistry.getInstrumentation().targetContext.getSharedPreferences("resource_updates",0)
+        installed=p.getString("installed",null);active=p.getString("active",null);p.edit().clear().commit()
+    }
+    @org.junit.After fun restoreDownloadedLibraries() {
+        InstrumentationRegistry.getInstrumentation().targetContext.getSharedPreferences("resource_updates",0).edit().clear().putString("installed",installed).putString("active",active).commit()
+    }
     @Test fun bundledResourceSupportsLookupAndAssociatedPractice() = runBlocking {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val repo=LocalRepository(context)

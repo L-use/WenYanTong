@@ -19,8 +19,9 @@ import kotlin.coroutines.coroutineContext
 
 data class ResourceOffer(val version: String, val revision: Int, val url: String, val bytes: Long,
     val sha256: String, val notes: String, val minApp: Int, val id: String="sample.basic", val title: String="常用文言文基础库", val tag: String="resource-$version",
-    val entryCount: Int=0, val articleCount: Int=0, val license: String="", val review: String="")
-data class InstalledPack(val id: String, val title: String, val version: String, val revision: Int, val entries: Int, val articles: Int, val review: String)
+    val entryCount: Int=0, val articleCount: Int=0, val license: String="", val review: String="",val language: String=if(id.startsWith("english."))"en" else "zh",val category: String=resourceCategory(id))
+data class InstalledPack(val id: String, val title: String, val version: String, val revision: Int, val entries: Int, val articles: Int, val review: String,val language: String=if(id.startsWith("english."))"en" else "zh",val category: String=resourceCategory(id))
+fun resourceCategory(id: String): String=when { id.startsWith("english.")->"vocabulary";id.startsWith("dictionary.")->"dictionary";id.startsWith("reading.")->"reading";id.startsWith("corpus.")->"original";else->"basic" }
 data class PreparedResource(val directory: File, val manifest: JSONObject)
 
 /** One cumulative base library. User records live in another database and are never replaced. */
@@ -78,7 +79,7 @@ class ResourceStore(private val context: Context, private val transport: UpdateT
             val item=packs.getJSONObject(index)
             val offer=ResourceOffer(item.getString("version"),item.getInt("revision"),item.getString("url"),item.getLong("bytes"),
                 item.getString("sha256"),item.getString("notes"),item.getInt("minAppVersionCode"),item.getString("id"),item.getString("title"),item.getString("tag"),
-                item.getInt("entryCount"),item.optInt("articleCount"),item.getString("license"),item.optString("reviewStatus"))
+                item.getInt("entryCount"),item.optInt("articleCount"),item.getString("license"),item.optString("reviewStatus"),item.optString("language",if(item.getString("id").startsWith("english."))"en" else "zh"),item.optString("category",resourceCategory(item.getString("id"))))
             require(ids.add(offer.id));validateOffer(offer);offer
         }
     }

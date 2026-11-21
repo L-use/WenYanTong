@@ -16,7 +16,7 @@ class UpgradePersistenceTest {
             repository.initialize()
             assertTrue(repository.history().any { it.query=="hello" && it.favorite })
             assertTrue(repository.wrongCount()>0)
-            assertEquals(4,BuildConfig.VERSION_CODE)
+            assertEquals(5,BuildConfig.VERSION_CODE)
             assertEquals(0,context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)
         } finally { repository.close() }
     }

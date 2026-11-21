@@ -1,0 +1,46 @@
+[
+  {
+    "key": "kyle",
+    "repository": "KyleBing/english-vocabulary",
+    "commit": "731240a848dca14e2cf17510f384312b788863c1",
+    "files": [
+      {
+        "path": "LICENSE",
+        "sha1": "4974c0ec054bba1b76aa1df0c03b220aa31f82e9",
+        "bytes": 1500
+      },
+      {
+        "path": "README.md",
+        "sha1": "87198afad1cce1e3d57ccb95c2627c2291cecc4f",
+        "bytes": 6682
+      },
+      {
+        "path": "full_line_jsonl/full/正序/六级.jsonl",
+        "sha1": "2698a9a955f0de01f1edb5581f9b1849d484b5a5",
+        "bytes": 11992242
+      }
+    ]
+  },
+  {
+    "key": "exam",
+    "repository": "exam-data/CETVocabulary",
+    "commit": "83eaa58b181bc388dc7a662d00179e3d888d900a",
+    "files": [
+      {
+        "path": "LICENSE",
+        "sha1": "5fc78dc80f6fcced52b12625a0267ee734b4f01d",
+        "bytes": 20857
+      },
+      {
+        "path": "README.md",
+        "sha1": "2a7f400f77d88582e1b757d0ff258b3b5629c283",
+        "bytes": 2476
+      },
+      {
+        "path": "cet_full_list.json",
+        "sha1": "bae0252f964ddd92db9f35e29ae5baec3485dd66",
+        "bytes": 2542509
+      }
+    ]
+  }
+]

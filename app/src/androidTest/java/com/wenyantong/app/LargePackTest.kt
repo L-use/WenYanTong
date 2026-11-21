@@ -47,7 +47,7 @@ class LargePackTest {
         org.junit.Assume.assumeTrue(InstrumentationRegistry.getArguments().getString("liveCatalog")=="true")
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val store=ResourceStore(context);val offers=store.catalog()
-        assertEquals(8,offers.size);assertEquals(8,offers.map { it.id }.toSet().size)
+        assertEquals(10,offers.size);assertEquals(10,offers.map { it.id }.toSet().size)
         for(offer in offers) {
             val file=store.download(offer) { }
             try {

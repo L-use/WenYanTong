@@ -93,12 +93,14 @@ class Pack:
         return key
 
     def finish(self,description,extra=None):
+        properties=dict(extra or {})
+        pack_type=properties.pop('type','learning')
         self.db.commit()
         if self.db.execute('PRAGMA integrity_check').fetchone()[0]!='ok' or self.db.execute('PRAGMA foreign_key_check').fetchall():raise ValueError('SQLite validation failed')
         counts={table:self.db.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] for table in ['dict_entry','dict_sense','article','passage','provenance','record_source']}
         self.db.close()
         if self.path.stat().st_size>128*1024*1024:raise ValueError('Database exceeds the multi-pack format limit of 128 MiB')
-        manifest=dict(schemaVersion=2,id=self.id,title=self.title,type='learning',version='1.0.0',revision=1,database='sample.db',
+        manifest=dict(schemaVersion=2,id=self.id,title=self.title,type=pack_type,version='1.0.0',revision=1,database='sample.db',
             entryCount=counts['dict_entry'],senseCount=counts['dict_sense'],articleCount=counts['article'],passageCount=counts['passage'],questionCount=0,
             provenanceCount=counts['provenance'],sourceLinkCount=counts['record_source'],inputRecordCount=self.raw_count,description=description,
             source=dict(repository=self.repo,commit=self.commit),license=self.license,licenseText=self.license_text,reviewStatus=self.review,
@@ -107,7 +109,7 @@ class Pack:
             compatibilityNote='Requires a new multi-pack reader; not installable in v0.3.0. Keep packs separate; search downloaded packs globally with source attribution.',
             deduplication='Only exact NFC-normalized records merge within this pack; all contributing locators retained. Different translations or readings remain separate.',
             files=[dict(path='sample.db',bytes=self.path.stat().st_size,sha256=digest(self.path.read_bytes()))],
-            **(extra or {}))
+            **properties)
         manifest_path=self.folder/'manifest.json';manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
         archive=self.folder/(self.id+'-1.0.0.zip')
         with zipfile.ZipFile(archive,'w') as package:

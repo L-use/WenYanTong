@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import com.wenyantong.app.feature.update.*
+import com.wenyantong.app.feature.ai.*
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -21,6 +22,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 
 data class AppState(
+    val aiSettings: AiSettings=AiSettings(), val aiNotice: String="", val aiBusy: Boolean=false, val practiceBusy: Boolean=false, val practiceNotice: String="",
     val ready: Boolean = false, val busy: Boolean = false, val error: String? = null,
     val input: String = "", val direction: Direction = Direction.CLASSICAL_TO_ZH,
     val mode: Mode = Mode.OFFLINE, val theme: String = "system", val fontSize: Float = 18f,
@@ -40,12 +42,15 @@ data class AppState(
     val storage: StorageUiState = StorageUiState()
 )
 
-class AppViewModel(application: Application) : AndroidViewModel(application) {
+class AppViewModel @JvmOverloads constructor(application: Application, private val ai: AiService=AiService()) : AndroidViewModel(application) {
+    private val aiStore=AiSettingsStore(application)
+    private var practiceJob: Job?=null
+    private var aiSettingsJob: Job?=null
     private val repo = LocalRepository(application)
     private val updates = UpdateRepository(application)
     private val resources=com.wenyantong.app.feature.resources.ResourceStore(application)
     private var resourceJob: Job?=null
-    private val mutable = MutableStateFlow(AppState(mode=repo.mode(),theme=repo.theme(),fontSize=repo.fontSize(),automaticUpdates=updates.autoCheckEnabled()))
+    private val mutable = MutableStateFlow(AppState(aiSettings=aiStore.settings(),mode=repo.mode(),theme=repo.theme(),fontSize=repo.fontSize(),automaticUpdates=updates.autoCheckEnabled()))
     val state = mutable.asStateFlow()
     private var queryJob: Job? = null
     private var sessionId = ""
@@ -68,17 +73,28 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun input(text: String) { mutable.update { it.copy(input=text.take(2000)) } }
     fun dictionaryFilter(title: String) { mutable.update { it.copy(dictionaryFilter=title) } }
     fun direction(direction: Direction) { mutable.update { it.copy(direction=direction) } }
-    fun mode(mode: Mode) { repo.setMode(mode);mutable.update { it.copy(mode=mode) };maybeCheckUpdate() }
+    fun mode(mode: Mode) { if(mode==Mode.OFFLINE) { queryJob?.cancel();practiceJob?.cancel();mutable.update { it.copy(busy=false,practiceBusy=false) } };repo.setMode(mode);mutable.update { it.copy(mode=mode) };maybeCheckUpdate() }
     fun reading(theme: String, font: Float) { repo.setReading(theme,font);mutable.update { it.copy(theme=theme,fontSize=font) } }
     fun query(text: String = state.value.input, direction: Direction = state.value.direction) {
         if(text.isBlank() || !state.value.ready) return
         queryJob?.cancel()
-        mutable.update { it.copy(input=text,direction=direction,busy=true,result=null,error=null) }
+        mutable.update { it.copy(input=text,direction=direction,busy=true,result=null,error=null,aiNotice="") }
         queryJob = viewModelScope.launch {
             try {
-                val result = repo.query(text,direction)
+                val local = repo.query(text,direction)
                 val history = repo.history()
-                mutable.update { it.copy(result=result,history=history,busy=false) }
+                mutable.update { it.copy(result=local,history=history) }
+                val mode=state.value.mode;val settings=aiStore.settings()
+                val needsAi=mode==Mode.AI || (mode==Mode.AUTO && local.passage==null && !local.exactWordHit)
+                if(needsAi && settings.hasKey) {
+                    mutable.update { it.copy(aiNotice="正在结合本地词义请求 AI…") }
+                    try {
+                        val secret=withContext(Dispatchers.IO) { aiStore.secret() }
+                        val generated=ai.translate(settings,secret,local)
+                        mutable.update { it.copy(result=local.copy(passage=generated,alternatives=listOf(generated)+local.alternatives),busy=false,aiNotice="AI 生成参考；本地词条与来源仍保留。") }
+                    } catch(cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                    catch(e: Exception) { mutable.update { it.copy(result=local,busy=false,aiNotice="AI 补充未完成："+aiError(e)) } }
+                } else mutable.update { it.copy(busy=false,aiNotice=if(needsAi && !settings.hasKey)"尚未配置 AI 渠道，当前展示本地查询结果。" else "") }
             } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
             catch (e: Exception) { mutable.update { it.copy(error=e.message ?: "查询失败",busy=false) } }
         }
@@ -86,12 +102,65 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun favorite(item: HistoryItem) = viewModelScope.launch { repo.favorite(item.id,!item.favorite);refreshHistory() }
     fun delete(item: HistoryItem) = viewModelScope.launch { repo.deleteHistory(item.id);refreshHistory() }
     private suspend fun refreshHistory() { val history = repo.history();mutable.update { it.copy(history=history) } }
-    fun startPractice(entryIds: Set<String>, count: Int, wrongOnly: Boolean = false, onReady: () -> Unit) = viewModelScope.launch {
-        val questions = repo.questions(entryIds,wrongOnly).shuffled().take(count)
-        sessionId = UUID.randomUUID().toString()
-        mutable.update { it.copy(questions=questions,answers=emptyList(),questionIndex=0,submitted=false,selected=null,savingAnswer=false,practiceFinished=false,error=null) }
-        onReady()
+    fun startPractice(entryIds: Set<String>, count: Int, wrongOnly: Boolean = false, useAi: Boolean=false, onReady: () -> Unit) {
+        if(practiceJob?.isActive==true)return
+        mutable.update { it.copy(practiceBusy=true,practiceNotice="",error=null) }
+        practiceJob=viewModelScope.launch {
+            try {
+                val questions=if(useAi && !wrongOnly) {
+                    check(state.value.mode!=Mode.OFFLINE) { "离线模式不调用 AI，请先切换自动或 AI 模式。" }
+                    val settings=aiStore.settings();check(settings.hasKey) { "请先配置 AI 渠道与 API Key。" }
+                    val result=state.value.result
+                    val previews=when {
+                        entryIds.isNotEmpty() -> state.value.entries.filter { e -> e.linkedIds.any { it in entryIds } }
+                        result?.entries?.isNotEmpty()==true -> result.entries
+                        result!=null -> emptyList()
+                        else -> state.value.entries.take(6)
+                    }
+                    val context=previews.take(6).mapNotNull { repo.entryDetails(it.headword,3) }.filter { it.senses.isNotEmpty() }
+                    check(context.isNotEmpty()) { "当前结果没有可依据的词条，请先查词或选择已收录内容。" }
+                    mutable.update { it.copy(practiceNotice="AI 正在根据当前结果与本地词义出题…") }
+                    val secret=withContext(Dispatchers.IO) { aiStore.secret() }
+                    ai.generate(settings,secret,result,context,count).also { repo.saveGenerated(it,result?.query.orEmpty()) }
+                } else repo.questions(entryIds,wrongOnly).shuffled().take(count)
+                sessionId=UUID.randomUUID().toString()
+                mutable.update { it.copy(questions=questions,answers=emptyList(),questionIndex=0,submitted=false,selected=null,savingAnswer=false,practiceFinished=false,practiceBusy=false,practiceNotice=if(useAi)"AI 题目已生成并保存，可结合原词条核对。" else "",error=null) }
+                onReady()
+            } catch(e: kotlinx.coroutines.CancellationException) { mutable.update { it.copy(practiceBusy=false) };throw e }
+            catch(e: Exception) { mutable.update { it.copy(practiceBusy=false,practiceNotice=aiError(e)) } }
+        }
     }
+    fun cancelPractice() { practiceJob?.cancel();mutable.update { it.copy(practiceBusy=false,practiceNotice="已取消出题，可重新开始。") } }
+    private fun aiError(error: Exception): String = when(error) {
+        is org.json.JSONException -> "AI 返回格式不符合要求，请重试或更换模型。"
+        is java.net.SocketTimeoutException -> "AI 请求超时，请稍后重试。"
+        is java.io.IOException -> "无法连接 AI 服务，请检查网络和地址。"
+        else -> error.message ?: "AI 请求失败，请检查渠道设置。"
+    }
+    fun saveAi(settings: AiSettings,key: String,enableAuto: Boolean) {
+        if(aiSettingsJob?.isActive==true)return
+        mutable.update { it.copy(aiBusy=true,aiNotice="正在加密保存…") }
+        aiSettingsJob=viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) { aiStore.save(settings,key) }
+                mutable.update { it.copy(aiSettings=aiStore.settings(),aiBusy=false,aiNotice="AI 配置已加密保存。") }
+                if(enableAuto)mode(Mode.AUTO)
+            } catch(e: Exception) { mutable.update { it.copy(aiBusy=false,aiNotice=aiError(e)) } }
+        }
+    }
+    fun testAi(settings: AiSettings,key: String) {
+        if(aiSettingsJob?.isActive==true)return
+        mutable.update { it.copy(aiBusy=true,aiNotice="正在保存并测试连接…") }
+        aiSettingsJob=viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) { aiStore.save(settings,key) }
+                val saved=aiStore.settings();val secret=withContext(Dispatchers.IO) { aiStore.secret() }
+                val message=ai.test(saved,secret)
+                mutable.update { it.copy(aiSettings=saved,aiBusy=false,aiNotice=message) }
+            } catch(e: Exception) { mutable.update { it.copy(aiSettings=aiStore.settings(),aiBusy=false,aiNotice=aiError(e)) } }
+        }
+    }
+    fun clearAi() { aiSettingsJob?.cancel();queryJob?.cancel();practiceJob?.cancel();aiStore.clear();mode(Mode.OFFLINE);mutable.update { it.copy(aiSettings=AiSettings(),aiBusy=false,aiNotice="AI 配置和密钥已清除。") } }
     fun select(index: Int) { if(!state.value.submitted && !state.value.savingAnswer) mutable.update { it.copy(selected=index) } }
     fun submit() {
         val s = state.value

@@ -15,6 +15,16 @@ enum class AiProtocol(val title: String) { COMPATIBLE("Chat Completions 兼容")
 data class AiSettings(val protocol: AiProtocol=AiProtocol.COMPATIBLE,val baseUrl: String="",val model: String="",val hasKey: Boolean=false)
 
 object AiPolicy {
+    fun modelsEndpoint(settings: AiSettings): String {
+        val endpoint=endpoint(settings)
+        val root=endpoint.removeSuffix(if(settings.protocol==AiProtocol.CLAUDE)"/messages" else "/chat/completions")
+        val uri=URI(root)
+        // Bailian's catalog uses its native API on the same host, not the chat compatibility path.
+        if(settings.protocol==AiProtocol.COMPATIBLE && (uri.host=="dashscope.aliyuncs.com" || uri.host=="dashscope-intl.aliyuncs.com" || uri.host=="dashscope-us.aliyuncs.com" || uri.host.endsWith(".maas.aliyuncs.com")) && uri.path=="/compatible-mode/v1") {
+            return root.removeSuffix("/compatible-mode/v1")+"/api/v1/models"
+        }
+        return root+"/models"
+    }
     fun endpoint(settings: AiSettings): String {
         val uri=runCatching { URI(settings.baseUrl.trim()) }.getOrElse { error("API 地址格式不正确。") }
         require(uri.scheme=="https" && !uri.host.isNullOrBlank() && uri.userInfo==null && uri.rawQuery==null && uri.rawFragment==null && settings.baseUrl.length<=2048) { "请填写不含密钥、查询参数或账号的 HTTPS API 地址。" }
@@ -41,6 +51,15 @@ class AiSettingsStore(context: Context) {
     }
     @Synchronized fun settings()=AiSettings(runCatching { AiProtocol.valueOf(prefs.getString("protocol","COMPATIBLE")!!) }.getOrDefault(AiProtocol.COMPATIBLE),prefs.getString("base","") ?: "",prefs.getString("model","") ?: "",prefs.contains("encrypted_key"))
     @Synchronized fun credentials(): Pair<AiSettings,String> = settings() to secret()
+    @Synchronized fun discoveryKey(settings: AiSettings,newKey: String): String {
+        AiPolicy.endpoint(settings)
+        val candidate=newKey.trim()
+        if(candidate.length>8192 || candidate.any { it.isWhitespace() || it.isISOControl() })throw AiModelException("API Key 格式不正确。")
+        if(candidate.isNotBlank())return candidate
+        val old=settings()
+        if(!(old.hasKey && old.protocol==settings.protocol && AiPolicy.modelsEndpoint(old)==AiPolicy.modelsEndpoint(settings)))throw AiModelException("请填写当前厂商的 API Key。")
+        return secret()
+    }
     @Synchronized fun save(settings: AiSettings,newKey: String) {
         AiPolicy.validate(settings)
         val old=settings()

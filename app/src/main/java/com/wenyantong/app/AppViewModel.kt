@@ -42,7 +42,7 @@ data class AppState(
     val storage: StorageUiState = StorageUiState()
 )
 
-class AppViewModel @JvmOverloads constructor(application: Application, private val ai: AiService=AiService()) : AndroidViewModel(application) {
+class AppViewModel @JvmOverloads constructor(application: Application, private val ai: AiService=AiService(), private val modelClient: AiModelClient=AiModelClient()) : AndroidViewModel(application) {
     private val aiStore=AiSettingsStore(application)
     private var practiceJob: Job?=null
     private var aiSettingsJob: Job?=null
@@ -136,6 +136,10 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
         is java.net.SocketTimeoutException -> "AI 请求超时，请稍后重试。"
         is java.io.IOException -> "无法连接 AI 服务，请检查网络和地址。"
         else -> error.message ?: "AI 请求失败，请检查渠道设置。"
+    }
+    suspend fun discoverAiModels(settings: AiSettings,key: String): List<AiModelOption> {
+        val resolved=withContext(Dispatchers.IO) { aiStore.discoveryKey(settings,key) }
+        return modelClient.list(settings,resolved)
     }
     fun saveAi(settings: AiSettings,key: String,enableAuto: Boolean) {
         if(aiSettingsJob?.isActive==true)return

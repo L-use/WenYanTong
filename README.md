@@ -1,6 +1,6 @@
 # 文言通 WenYanTong
 
-一款采用 Claude 暖白与陶土橙视觉的 Android 古文学习工具。当前版本 **0.5.0** 增加英文在线词包、语言/类型筛选、自定义 AI 渠道及依据查询结果和词库生成练习。
+一款采用 Claude 暖白与陶土橙视觉的 Android 古文学习工具。当前版本 **0.5.1** 支持 14 个 AI 厂商/平台预设，输入 Key 自动获取、搜索和选择模型；保留 10 个独立在线资源包、语言/类型筛选及依据查询结果和词库生成练习。操作与接口依据见 [AI_MODEL_DISCOVERY.md](docs/AI_MODEL_DISCOVERY.md)。
 
 源码与下载：[GitHub 仓库](https://github.com/L-use/WenYanTong) · [最新安装包](https://github.com/L-use/WenYanTong/releases/latest)。版本更新规范见 `docs/RELEASING.md`，本地路径与导入导出见 `docs/USER_DATA.md`。
 

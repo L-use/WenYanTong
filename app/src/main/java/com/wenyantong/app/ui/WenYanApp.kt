@@ -612,6 +612,8 @@ private val PagePadding = 24.dp
 
 @Composable private fun LibraryPage(state: AppState, vm: AppViewModel, back:()->Unit, open:(LibraryArticle)->Unit, sample:(Passage)->Unit) {
     var query by rememberSaveable { mutableStateOf(state.articleQuery) }
+    val keyboard=androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focus=androidx.compose.ui.platform.LocalFocusManager.current
     LaunchedEffect(Unit) { vm.loadArticles(state.articlePack,state.articleQuery) }
     Column {
         PageHeader("经典古文",back)
@@ -620,7 +622,7 @@ private val PagePadding = 24.dp
         LazyColumn(contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
             if(state.articleBusy)item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             if(state.articlePack.isBlank())items(state.passages.filter { it.direction==Direction.CLASSICAL_TO_ZH && (query.isBlank() || it.work.contains(query) || it.original.contains(query)) },key={"sample-"+it.id}) { p -> Paper(Modifier.clickable { sample(p) }) { Text(p.original,fontSize=20.sp);Text(p.work,fontSize=12.sp) } }
-            items(state.articles,key={it.id}) { item -> Paper(Modifier.clickable { open(item) }) {
+            items(state.articles,key={it.id}) { item -> Paper(Modifier.clickable { focus.clearFocus();keyboard?.hide();open(item) }) {
                 Text(item.title,fontSize=20.sp,fontFamily=FontFamily.Serif)
                 Text(item.author+" · "+item.dynasty,fontSize=12.sp)
                 Text(state.installedPacks.firstOrNull { it.id==item.packId }?.title ?: item.packId,fontSize=12.sp,color=MaterialTheme.colorScheme.primary)

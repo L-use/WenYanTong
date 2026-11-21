@@ -63,6 +63,7 @@ class ResourceFlowTest {
         compose.onNode(hasText("师说") and hasClickAction() and !hasSetTextAction()).performClick()
         compose.waitUntil(20_000) { compose.onAllNodesWithText("古文阅读").fetchSemanticsNodes().isNotEmpty() }
         compose.onAllNodesWithText("古之学者必有师",substring=true).onFirst().assertExists()
+        compose.waitUntil(10_000) { androidx.core.view.ViewCompat.getRootWindowInsets(compose.activity.window.decorView)?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())!=true }
         val instrumentation=InstrumentationRegistry.getInstrumentation()
         val folder=File(instrumentation.targetContext.getExternalFilesDir(null),"screenshots").apply { mkdirs() }
         compose.waitForIdle()

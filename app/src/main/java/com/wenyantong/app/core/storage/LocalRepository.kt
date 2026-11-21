@@ -114,7 +114,7 @@ class LocalRepository(private val context: Context) {
         }
     }
 
-    suspend fun query(text: String, direction: Direction): QueryResult = withContext(Dispatchers.IO) {
+    suspend fun query(text: String, direction: Direction,recordHistory: Boolean=true): QueryResult = withContext(Dispatchers.IO) {
         val candidates = passages()
         val forward = if (direction == Direction.EN_TO_ZH) Direction.ZH_TO_EN else if (direction == Direction.ZH_TO_CLASSICAL) Direction.CLASSICAL_TO_ZH else direction
         val reverse = forward != direction
@@ -135,7 +135,7 @@ class LocalRepository(private val context: Context) {
         val alternatives=allMatches.groupBy { listOf(it.original,it.translation) }.values.map { same -> same.first().copy(sources=same.flatMap { p -> p.sources.ifEmpty { listOf(p.work+"\n常用/内置示例库 · 项目原创译注 CC0-1.0") } }.distinct()) }
         val chosen=alternatives.firstOrNull()
         val result = QueryResult(text.trim(),direction,chosen,detailed,alternatives)
-        saveHistory(result.query,direction)
+        if(recordHistory)saveHistory(result.query,direction)
         result
     }
 
@@ -163,10 +163,16 @@ class LocalRepository(private val context: Context) {
         }
         }
         val generated=generatedQuestions().filter { (entryIds.isEmpty() || it.entryId in entryIds) && (!wrongOnly || it.id in wrongIds) }
-        (local+generated).distinctBy { it.id }
+        (generated+local).distinctBy { it.id }
     }
-    private fun generatedQuestions(): List<Question> = personal.readableDatabase.rawQuery("SELECT id,stem,options_json,answer,explanation,entry_id FROM generated_question ORDER BY created_at DESC",null).use { c ->
-        buildList { while(c.moveToNext())add(Question(c.getString(0),c.getString(1),JSONArray(c.getString(2)).strings(),c.getInt(3),c.getString(4),c.getString(5))) }
+    private fun generatedQuestions(): List<Question> = personal.readableDatabase.rawQuery("SELECT id,stem,options_json,answer,explanation,entry_id,kind,edited FROM generated_question ORDER BY created_at DESC",null).use { c ->
+        buildList { while(c.moveToNext())add(Question(c.getString(0),c.getString(1),JSONArray(c.getString(2)).strings(),c.getInt(3),c.getString(4),c.getString(5),QuestionKind.valueOf(c.getString(6)),c.getInt(7)==1)) }
+    }
+    suspend fun editQuestion(question: Question) = withContext(Dispatchers.IO) {
+        val checked=question.copy(stem=LearningText.clean(question.stem),options=question.options.map(LearningText::clean),explanation=LearningText.clean(question.explanation),edited=true)
+        require(checked.stem.isNotBlank() && checked.stem.length<=2000 && checked.explanation.isNotBlank() && checked.explanation.length<=16000 && checked.options.size==(if(checked.kind==QuestionKind.TRUE_FALSE)2 else 4) && checked.options.all { it.isNotBlank() && it.length<=500 } && checked.options.distinct().size==checked.options.size && checked.answer in checked.options.indices) { "请填写完整题干、不同选项、正确答案和解析。" }
+        val db=personal.writableDatabase;db.beginTransaction()
+        try { db.delete("generated_question","id=?",arrayOf(checked.id));insertGenerated(db,listOf(checked),"");db.setTransactionSuccessful() } finally { db.endTransaction() }
     }
     suspend fun saveGenerated(questions: List<Question>, query: String) = withContext(Dispatchers.IO) {
         val db=personal.writableDatabase;db.beginTransaction()
@@ -175,6 +181,7 @@ class LocalRepository(private val context: Context) {
     private fun insertGenerated(db: SQLiteDatabase,questions: List<Question>,query: String) {
         questions.forEach { q -> db.insertWithOnConflict("generated_question",null,ContentValues().apply {
             put("id",q.id);put("stem",q.stem);put("options_json",JSONArray(q.options).toString());put("answer",q.answer);put("explanation",q.explanation);put("entry_id",q.entryId);put("created_at",System.currentTimeMillis());put("context_query",query.take(2000))
+            put("kind",q.kind.name);put("edited",if(q.edited)1 else 0)
         },SQLiteDatabase.CONFLICT_IGNORE) }
     }
     private fun wrongIds(): Set<String> = personal.readableDatabase.rawQuery("SELECT question_id FROM wrong_question WHERE mastered=0",null).use { c ->
@@ -210,13 +217,17 @@ class LocalRepository(private val context: Context) {
             val wrong=db.rawQuery("SELECT question_id,count,mastered FROM wrong_question ORDER BY question_id",null).use { c ->
                 buildList { while(c.moveToNext()) add(BackupWrong(c.getString(0),c.getInt(1),c.getInt(2)==1)) }
             }
-            UserBackup(history,answers,wrong,BackupPreferences(mode(),theme(),fontSize(),context.getSharedPreferences("app_updates",Context.MODE_PRIVATE).getBoolean("auto",true)),generatedQuestions())
+            UserBackup(history,answers,wrong,BackupPreferences(mode(),theme(),fontSize(),context.getSharedPreferences("app_updates",Context.MODE_PRIVATE).getBoolean("auto",true)),generatedQuestions(),com.wenyantong.app.feature.ai.AiSkillStore(context).all())
         } finally { db.endTransaction() }
         UserBackupCodec.encode(snapshot)
     }
     suspend fun importUserData(backup: UserBackup): BackupSummary = withContext(Dispatchers.IO) {
         // Validate the entire snapshot before starting any mutation, including callers other than the picker.
         val checked=UserBackupCodec.decode(UserBackupCodec.encode(backup))
+        val skillStore=com.wenyantong.app.feature.ai.AiSkillStore(context)
+        val existingSkills=skillStore.all()
+        val mergedSkills=existingSkills+checked.skills.filter { imported -> existingSkills.none { it.id==imported.id } }
+        com.wenyantong.app.feature.ai.AiSkillStore.validateCollection(mergedSkills)
         val db=personal.writableDatabase
         db.beginTransaction()
         try {
@@ -236,6 +247,7 @@ class LocalRepository(private val context: Context) {
         } finally { db.endTransaction() }
         prefs.edit { putString("mode",checked.preferences.mode.name);putString("theme",checked.preferences.theme);putFloat("fontSize",checked.preferences.fontSize) }
         context.getSharedPreferences("app_updates",Context.MODE_PRIVATE).edit { putBoolean("auto",checked.preferences.automaticUpdates) }
+        skillStore.replaceAll(mergedSkills)
         checked.summary()
     }
     fun mode() = Mode.entries.firstOrNull { it.name == prefs.getString("mode","OFFLINE") } ?: Mode.OFFLINE
@@ -248,15 +260,19 @@ class LocalRepository(private val context: Context) {
 
 private fun JSONArray.strings() = (0 until length()).map { getString(it) }
 
-private class PersonalDatabase(context: Context) : SQLiteOpenHelper(context,"personal.db",null,2) {
+private class PersonalDatabase(context: Context) : SQLiteOpenHelper(context,"personal.db",null,3) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE history(id INTEGER PRIMARY KEY AUTOINCREMENT,query TEXT NOT NULL,direction TEXT NOT NULL,timestamp INTEGER NOT NULL,favorite INTEGER NOT NULL DEFAULT 0,UNIQUE(query,direction))")
         db.execSQL("CREATE TABLE practice_answer(session_id TEXT NOT NULL,question_id TEXT NOT NULL,choice INTEGER NOT NULL,correct INTEGER NOT NULL,timestamp INTEGER NOT NULL,PRIMARY KEY(session_id,question_id))")
         db.execSQL("CREATE TABLE wrong_question(question_id TEXT PRIMARY KEY,count INTEGER NOT NULL,mastered INTEGER NOT NULL DEFAULT 0)")
         createGenerated(db)
+        addQuestionMetadata(db)
     }
     private fun createGenerated(db: SQLiteDatabase) { db.execSQL("CREATE TABLE generated_question(id TEXT PRIMARY KEY,stem TEXT NOT NULL,options_json TEXT NOT NULL,answer INTEGER NOT NULL,explanation TEXT NOT NULL,entry_id TEXT NOT NULL,created_at INTEGER NOT NULL,context_query TEXT NOT NULL)") }
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        check(oldVersion==1 && newVersion==2) { "不支持的用户数据库迁移。" };createGenerated(db)
+        check(oldVersion in 1..2 && newVersion==3) { "不支持的用户数据库迁移。" }
+        if(oldVersion<2)createGenerated(db)
+        addQuestionMetadata(db)
     }
+    private fun addQuestionMetadata(db: SQLiteDatabase) { db.execSQL("ALTER TABLE generated_question ADD COLUMN kind TEXT NOT NULL DEFAULT 'SINGLE'");db.execSQL("ALTER TABLE generated_question ADD COLUMN edited INTEGER NOT NULL DEFAULT 0") }
 }

@@ -23,21 +23,24 @@ import com.wenyantong.app.AppState
 import com.wenyantong.app.AppViewModel
 
 @Composable fun AiSettingsPage(state: AppState,vm: AppViewModel,back:()->Unit) {
-    var protocol by remember(state.aiSettings) { mutableStateOf(state.aiSettings.protocol) }
-    var base by remember(state.aiSettings) { mutableStateOf(state.aiSettings.baseUrl) }
-    var model by remember(state.aiSettings) { mutableStateOf(state.aiSettings.model) }
-    var secret by remember { mutableStateOf("") }
+    var protocol by remember(state.aiSettings,state.activeAiProfile) { mutableStateOf(state.aiSettings.protocol) }
+    var base by remember(state.aiSettings,state.activeAiProfile) { mutableStateOf(state.aiSettings.baseUrl) }
+    var model by remember(state.aiSettings,state.activeAiProfile) { mutableStateOf(state.aiSettings.model) }
+    var secret by remember(state.activeAiProfile) { mutableStateOf("") }
+    var profileName by remember(state.activeAiProfile) { mutableStateOf(state.aiProfiles.firstOrNull { it.id==state.activeAiProfile }?.name.orEmpty()) }
+    var manager by remember { mutableStateOf(false) }
+    var skillManager by remember { mutableStateOf(false) }
     var remove by remember { mutableStateOf(false) }
     var provider by remember(state.aiSettings) { mutableStateOf(AiProvider.matching(state.aiSettings)) }
     var providerPicker by remember { mutableStateOf(false) }
     var refresh by remember { mutableIntStateOf(0) }
     var handledRefresh by remember { mutableIntStateOf(0) }
     var autoDiscover by remember { mutableStateOf(true) }
-    var models by remember(protocol,base,secret) { mutableStateOf(emptyList<AiModelOption>()) }
-    var modelNotice by remember(protocol,base,secret) { mutableStateOf("") }
-    var loading by remember(protocol,base,secret) { mutableStateOf(false) }
-    var modelPicker by remember(protocol,base,secret) { mutableStateOf(false) }
-    LaunchedEffect(protocol,base,secret,refresh,autoDiscover) {
+    var models by remember(protocol,base,secret,state.activeAiProfile) { mutableStateOf(emptyList<AiModelOption>()) }
+    var modelNotice by remember(protocol,base,secret,state.activeAiProfile) { mutableStateOf("") }
+    var loading by remember(protocol,base,secret,state.activeAiProfile) { mutableStateOf(false) }
+    var modelPicker by remember(protocol,base,secret,state.activeAiProfile) { mutableStateOf(false) }
+    LaunchedEffect(protocol,base,secret,refresh,autoDiscover,state.activeAiProfile) {
         val manual=refresh!=handledRefresh
         handledRefresh=refresh
         if(!manual && (!autoDiscover || secret.isBlank())) {
@@ -61,6 +64,14 @@ import com.wenyantong.app.AppViewModel
         Row(Modifier.fillMaxWidth().padding(12.dp)) { IconButton(onClick=back) { Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回") };Text("AI 设置",Modifier.padding(12.dp),fontSize=21.sp) }
         Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             Text("选择渠道，连接自己的模型。",fontSize=24.sp)
+            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick=vm::newApi,enabled=!state.aiBusy) { Text("添加 API") }
+                OutlinedButton(onClick={manager=true},enabled=!state.aiBusy) { Text("API 管理（${state.aiProfiles.size}）") }
+            }
+            val tested=state.aiConnected && protocol==state.aiSettings.protocol && base.trim()==state.aiSettings.baseUrl && model.trim()==state.aiSettings.model && secret.isBlank()
+            Text(if(tested)"连接成功 · 上次测试通过 · ${state.aiSettings.model}" else "当前配置尚未通过连接测试",color=if(tested)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(profileName,{profileName=it.take(60)},Modifier.fillMaxWidth(),label={Text("API 名称（可选）")},singleLine=true)
+            OutlinedButton(onClick={skillManager=true},modifier=Modifier.fillMaxWidth()) { Text("Skills 管理（${BuiltInSkills.items.size} 个内置 · ${state.skills.size} 个自建）") }
             Text("模型只接收本次查询及少量相关词义/出处，不上传历史或完整词库。调用可能产生服务商费用；API Key 在手机 Keystore 加密保存，不随用户备份导出。",fontSize=13.sp,lineHeight=22.sp)
             OutlinedButton(onClick={providerPicker=true},modifier=Modifier.fillMaxWidth()) { Text("选择厂商：${provider.title}") }
             if(provider.note.isNotBlank())Text(provider.note,fontSize=12.sp,lineHeight=20.sp)
@@ -77,10 +88,10 @@ import com.wenyantong.app.AppViewModel
             if(loading)LinearProgressIndicator(Modifier.fillMaxWidth())
             if(modelNotice.isNotBlank())Text(modelNotice,fontSize=13.sp,lineHeight=21.sp)
             OutlinedTextField(model,{model=it},Modifier.fillMaxWidth(),label={Text("模型 ID")},placeholder={Text("从目录选择，也可手动填写")},singleLine=true)
-            Button(onClick={vm.saveAi(AiSettings(protocol,base,model),secret,true);secret=""},enabled=!state.aiBusy,modifier=Modifier.fillMaxWidth()) { Text("保存并启用自动模式") }
+            Button(onClick={vm.renameApi(profileName);vm.saveAi(AiSettings(protocol,base,model),secret,true);secret=""},enabled=!state.aiBusy,modifier=Modifier.fillMaxWidth()) { Text("保存并启用自动模式") }
             Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick={vm.saveAi(AiSettings(protocol,base,model),secret,false);secret=""},enabled=!state.aiBusy) { Text("仅保存") }
-                OutlinedButton(onClick={vm.testAi(AiSettings(protocol,base,model),secret);secret=""},enabled=!state.aiBusy) { Text("保存并测试连接") }
+                OutlinedButton(onClick={vm.renameApi(profileName);vm.saveAi(AiSettings(protocol,base,model),secret,false);secret=""},enabled=!state.aiBusy) { Text("仅保存") }
+                OutlinedButton(onClick={vm.renameApi(profileName);vm.testAi(AiSettings(protocol,base,model),secret);secret=""},enabled=!state.aiBusy) { Text("保存并测试连接") }
             }
             if(state.aiBusy)LinearProgressIndicator(Modifier.fillMaxWidth())
             if(state.aiNotice.isNotBlank())Text(state.aiNotice,fontSize=14.sp,lineHeight=23.sp)
@@ -88,6 +99,16 @@ import com.wenyantong.app.AppViewModel
             TextButton(onClick={remove=true},enabled=!state.aiBusy) { Text("清除 AI 配置和密钥") }
         }
     }
+    if(manager)AlertDialog(onDismissRequest={manager=false},title={Text("API 管理")},text={LazyColumn(Modifier.heightIn(max=420.dp)) {
+        if(state.aiProfiles.isEmpty())item { Text("还没有保存的 API，点击添加 API 创建。") }
+        items(state.aiProfiles,key={it.id}) { profile -> Column(Modifier.padding(vertical=10.dp)) {
+            Text(profile.name+if(profile.id==state.activeAiProfile)" · 当前使用" else "")
+            Text(profile.settings.model,fontSize=13.sp)
+            Text(if(profile.connected)"连接成功" else "未连接或未测试",fontSize=12.sp)
+            Row { TextButton(onClick={vm.useApi(profile.id);manager=false}) { Text("使用 / 编辑") };TextButton(onClick={vm.deleteApi(profile.id)}) { Text("删除 API") } }
+        } }
+    }},confirmButton={TextButton(onClick={manager=false}) { Text("关闭") }})
+    if(skillManager)AiSkillsDialog(state,vm) { skillManager=false }
     if(providerPicker)AlertDialog(onDismissRequest={providerPicker=false},title={Text("选择模型厂商")},text={
         LazyColumn(Modifier.heightIn(max=420.dp).testTag("ai-provider-list")) { items(AiProvider.entries.toList()) { value ->
             TextButton(onClick={

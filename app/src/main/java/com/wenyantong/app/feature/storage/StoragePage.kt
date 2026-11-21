@@ -69,7 +69,7 @@ import java.util.Locale
     }
     state.storage.pending?.let { summary ->
         AlertDialog(onDismissRequest=vm::cancelImport,title={Text("合并导入这份备份？")},
-            text={Text("历史 ${summary.history} 条，收藏 ${summary.favorites} 条，答题 ${summary.answers} 条，错题 ${summary.wrong} 道，AI 题目快照 ${summary.generated} 道。\n\n现有记录会保留；重复记录去重。阅读与运行偏好恢复为备份中的设置。")},
+            text={Text("历史 ${summary.history} 条，收藏 ${summary.favorites} 条，答题 ${summary.answers} 条，错题 ${summary.wrong} 道，题目快照 ${summary.generated} 道，自建 Skills ${summary.skills} 个。\n\n现有记录会保留；重复记录去重。阅读与运行偏好恢复为备份中的设置。")},
             confirmButton={TextButton(onClick=vm::importPreparedData) { Text("合并导入") }},dismissButton={TextButton(onClick=vm::cancelImport) { Text("取消") }})
     }
 }

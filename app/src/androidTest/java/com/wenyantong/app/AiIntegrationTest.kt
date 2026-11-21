@@ -28,7 +28,7 @@ class AiIntegrationTest {
         val store=ViewModelStore();lateinit var vm: AppViewModel;var calls=0;val ids=mutableListOf<String>()
         val fake=AiTransport { _,secret,system,user,_ ->
             assertEquals("fixture-not-a-real-api-key",secret);assertFalse(user.contains(secret));calls++
-            if(system.contains("单选题")) {
+            if(system.contains("\"questions\"")) {
                 val input=JSONObject(user);assertEquals("之",input.getString("query"))
                 val entry=input.getJSONArray("entries").getJSONObject(0);val sense=entry.getJSONArray("senses").getJSONObject(0)
                 JSONObject().put("questions",JSONArray().apply { repeat(3) { i -> put(JSONObject().put("entryId",entry.getString("entryId")).put("stem","测试词义辨析第${i+1}题").put("options",JSONArray(listOf("代指所学内容","到某地","结构助词","转折连词"))).put("answer",0).put("explanation","依据本次给定的本地词义。").put("evidence",JSONArray().put(sense.getString("senseId")))) } }).toString()

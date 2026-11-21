@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 
 data class AppState(
+    val aiProfiles: List<AiProfile> = emptyList(),val activeAiProfile: String="",val aiConnected: Boolean=false,val skills: List<AiSkill> = emptyList(),val wrongQuestions: List<Question> = emptyList(),val wrongNotice: String="",
     val aiSettings: AiSettings=AiSettings(), val aiNotice: String="", val aiBusy: Boolean=false, val practiceBusy: Boolean=false, val practiceNotice: String="",
     val ready: Boolean = false, val busy: Boolean = false, val error: String? = null,
     val input: String = "", val direction: Direction = Direction.CLASSICAL_TO_ZH,
@@ -44,13 +45,14 @@ data class AppState(
 
 class AppViewModel @JvmOverloads constructor(application: Application, private val ai: AiService=AiService(), private val modelClient: AiModelClient=AiModelClient()) : AndroidViewModel(application) {
     private val aiStore=AiSettingsStore(application)
+    private val skillStore=AiSkillStore(application)
     private var practiceJob: Job?=null
     private var aiSettingsJob: Job?=null
     private val repo = LocalRepository(application)
     private val updates = UpdateRepository(application)
     private val resources=com.wenyantong.app.feature.resources.ResourceStore(application)
     private var resourceJob: Job?=null
-    private val mutable = MutableStateFlow(AppState(aiSettings=aiStore.settings(),mode=repo.mode(),theme=repo.theme(),fontSize=repo.fontSize(),automaticUpdates=updates.autoCheckEnabled()))
+    private val mutable = MutableStateFlow(AppState(aiSettings=aiStore.settings(),aiProfiles=aiStore.profiles(),activeAiProfile=aiStore.activeProfile(),aiConnected=aiStore.connected(),skills=skillStore.all(),mode=repo.mode(),theme=repo.theme(),fontSize=repo.fontSize(),automaticUpdates=updates.autoCheckEnabled()))
     val state = mutable.asStateFlow()
     private var queryJob: Job? = null
     private var sessionId = ""
@@ -81,17 +83,22 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
         mutable.update { it.copy(input=text,direction=direction,busy=true,result=null,error=null,aiNotice="") }
         queryJob = viewModelScope.launch {
             try {
-                val local = repo.query(text,direction)
+                val family=TranslationMode.of(direction)
+                val guessed=family.direction(text)
+                val first=repo.query(text,guessed,false)
+                val opposite=when(guessed) { Direction.CLASSICAL_TO_ZH->Direction.ZH_TO_CLASSICAL;Direction.ZH_TO_CLASSICAL->Direction.CLASSICAL_TO_ZH;Direction.ZH_TO_EN->Direction.EN_TO_ZH;Direction.EN_TO_ZH->Direction.ZH_TO_EN }
+                val second=if(family==TranslationMode.CLASSICAL && first.passage==null)repo.query(text,opposite,false) else null
+                val local=repo.query(text,if(second?.passage!=null)opposite else guessed)
                 val history = repo.history()
-                mutable.update { it.copy(result=local,history=history) }
+                mutable.update { it.copy(result=local,direction=local.direction,history=history) }
                 val mode=state.value.mode;val settings=aiStore.settings()
                 val needsAi=mode==Mode.AI || (mode==Mode.AUTO && local.passage==null && !local.exactWordHit)
                 if(needsAi && settings.hasKey) {
                     mutable.update { it.copy(aiNotice="正在结合本地词义请求 AI…") }
                     try {
                         val credentials=withContext(Dispatchers.IO) { aiStore.credentials() }
-                        val generated=ai.translate(credentials.first,credentials.second,local)
-                        mutable.update { it.copy(result=local.copy(passage=generated,alternatives=listOf(generated)+local.alternatives),busy=false,aiNotice="AI 生成参考；本地词条与来源仍保留。") }
+                        val generated=ai.translate(credentials.first,credentials.second,local,skillStore.instructions(SkillScope.TRANSLATE))
+                        mutable.update { it.copy(result=local.copy(direction=generated.direction,passage=generated,alternatives=listOf(generated)+local.alternatives),direction=generated.direction,busy=false,aiNotice="AI 生成参考；请结合语境与出处核对。") }
                     } catch(cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
                     catch(e: Exception) { mutable.update { it.copy(result=local,busy=false,aiNotice="AI 补充未完成："+aiError(e)) } }
                 } else mutable.update { it.copy(busy=false,aiNotice=if(needsAi && !settings.hasKey)"尚未配置 AI 渠道，当前展示本地查询结果。" else "") }
@@ -102,15 +109,16 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
     fun favorite(item: HistoryItem) = viewModelScope.launch { repo.favorite(item.id,!item.favorite);refreshHistory() }
     fun delete(item: HistoryItem) = viewModelScope.launch { repo.deleteHistory(item.id);refreshHistory() }
     private suspend fun refreshHistory() { val history = repo.history();mutable.update { it.copy(history=history) } }
-    fun startPractice(entryIds: Set<String>, count: Int, wrongOnly: Boolean = false, useAi: Boolean=false, onReady: () -> Unit) {
+    fun startPractice(entryIds: Set<String>, count: Int, wrongOnly: Boolean = false, useAi: Boolean=false,kinds: Set<QuestionKind> = setOf(QuestionKind.SINGLE), onReady: () -> Unit) {
         if(practiceJob?.isActive==true)return
         mutable.update { it.copy(practiceBusy=true,practiceNotice="",error=null) }
         practiceJob=viewModelScope.launch {
             try {
+                require(kinds.isNotEmpty()) { "请至少选择一种题型。" }
                 val questions=if(useAi && !wrongOnly) {
                     check(state.value.mode!=Mode.OFFLINE) { "离线模式不调用 AI，请先切换自动或 AI 模式。" }
                     val settings=aiStore.settings();check(settings.hasKey) { "请先配置 AI 渠道与 API Key。" }
-                    val result=state.value.result
+                    val result=state.value.result ?: state.value.input.takeIf { it.isNotBlank() }?.let { QueryResult(it,state.value.direction,null,emptyList()) }
                     val previews=when {
                         entryIds.isNotEmpty() -> state.value.entries.filter { e -> e.linkedIds.any { it in entryIds } }
                         result?.entries?.isNotEmpty()==true -> result.entries
@@ -118,11 +126,26 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
                         else -> state.value.entries.take(6)
                     }
                     val context=previews.take(6).mapNotNull { repo.entryDetails(it.headword,3) }.filter { it.senses.isNotEmpty() }
-                    check(context.isNotEmpty()) { "当前结果没有可依据的词条，请先查词或选择已收录内容。" }
+                    check(context.isNotEmpty() || !result?.query.isNullOrBlank()) { "请先输入查询内容或选择词条。" }
                     mutable.update { it.copy(practiceNotice="AI 正在根据当前结果与本地词义出题…") }
                     val credentials=withContext(Dispatchers.IO) { aiStore.credentials() }
-                    ai.generate(credentials.first,credentials.second,result,context,count).also { repo.saveGenerated(it,result?.query.orEmpty()) }
-                } else repo.questions(entryIds,wrongOnly).shuffled().take(count)
+                    ai.generate(credentials.first,credentials.second,result,context,count,kinds,skillStore.instructions(SkillScope.PRACTICE)).also { repo.saveGenerated(it,result?.query.orEmpty()) }
+                } else {
+                    val scope=if(entryIds.isNotEmpty())entryIds else state.value.result?.entries?.flatMap { it.linkedIds }?.toSet().orEmpty()
+                    val local=if(!wrongOnly && state.value.result!=null && scope.isEmpty())emptyList() else repo.questions(if(wrongOnly)emptySet() else scope,wrongOnly)
+                        .filter { wrongOnly || it.kind in kinds || (it.kind==QuestionKind.SINGLE && it.options.size==4) }.shuffled().take(count)
+                    check(local.isNotEmpty()) { "本次查询暂无离线题目；切换自动或 AI 模式并配置 API 后，可基于任意查询生成。" }
+                    if(wrongOnly)local else local.mapIndexed { index,q ->
+                        if(q.kind!=QuestionKind.SINGLE)return@mapIndexed q
+                        val kind=kinds.toList()[index%kinds.size]
+                        when(kind) {
+                            QuestionKind.SINGLE -> q
+                            QuestionKind.TRUE_FALSE -> { val correct=index%2==0;val choice=if(correct)q.answer else (q.answer+1)%q.options.size
+                                q.copy(id="ai-offline-${UUID.randomUUID()}",stem="判断所给答案是否正确：\n${q.stem}\n所给答案：${q.options[choice]}",options=listOf("正确","错误"),answer=if(correct)0 else 1,explanation=q.explanation+"\n原题正确答案：${q.options[q.answer]}",kind=kind) }
+                            QuestionKind.FILL_BLANK -> q.copy(id="ai-offline-${UUID.randomUUID()}",stem="选择正确内容填入 ___：\n${q.stem}\n答案：___",kind=kind)
+                        }
+                    }.also { repo.saveGenerated(it.filter { q -> q.id.startsWith("ai-offline-") },state.value.result?.query.orEmpty()) }
+                }
                 sessionId=UUID.randomUUID().toString()
                 mutable.update { it.copy(questions=questions,answers=emptyList(),questionIndex=0,submitted=false,selected=null,savingAnswer=false,practiceFinished=false,practiceBusy=false,practiceNotice=if(useAi)"AI 题目已生成并保存，可结合原词条核对。" else "",error=null) }
                 onReady()
@@ -141,6 +164,18 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
         val resolved=withContext(Dispatchers.IO) { aiStore.discoveryKey(settings,key) }
         return modelClient.list(settings,resolved)
     }
+    private fun refreshAi(notice: String="") { val profiles=aiStore.profiles();mutable.update { it.copy(aiSettings=aiStore.settings(),aiProfiles=profiles,activeAiProfile=aiStore.activeProfile(),aiConnected=aiStore.connected(),skills=skillStore.all(),aiNotice=notice) } }
+    fun newApi() { if(state.value.aiBusy)return;runCatching { aiStore.newProfile();refreshAi("请填写新 API，保存后加入管理列表。") }.onFailure { mutable.update { s -> s.copy(aiNotice=aiError(it as Exception)) } } }
+    fun useApi(id: String) { if(state.value.aiBusy)return;queryJob?.cancel();practiceJob?.cancel();aiStore.activateProfile(id);refreshAi("已切换当前 API。");mutable.update { it.copy(busy=false,practiceBusy=false) } }
+    fun deleteApi(id: String) { if(state.value.aiBusy)return;aiStore.deleteProfile(id);refreshAi("API 已删除。");if(!state.value.aiSettings.hasKey)mode(Mode.OFFLINE) }
+    fun renameApi(name: String) { if(name.isNotBlank())runCatching { aiStore.rename(name) };refreshAi() }
+    fun saveSkill(skill: AiSkill): Boolean = runCatching { skillStore.save(skill);refreshAi("技能已保存。");true }.getOrElse { error -> mutable.update { s -> s.copy(aiNotice=error.message ?: "技能保存失败。") };false }
+    fun deleteSkill(id: String) { skillStore.delete(id);refreshAi("技能已删除。") }
+    fun loadWrong()=viewModelScope.launch { val questions=repo.questions(wrongOnly=true);mutable.update { it.copy(wrongQuestions=questions,wrongNotice="") } }
+    fun editWrong(question: Question)=viewModelScope.launch {
+        try { repo.editQuestion(question);val questions=repo.questions(wrongOnly=true);mutable.update { it.copy(wrongQuestions=questions,wrongNotice="错题修改已保存。") } }
+        catch(e: Exception) { mutable.update { it.copy(wrongNotice=e.message ?: "保存失败。") } }
+    }
     fun saveAi(settings: AiSettings,key: String,enableAuto: Boolean) {
         if(aiSettingsJob?.isActive==true)return
         mutable.update { it.copy(aiBusy=true,aiNotice="正在加密保存…") }
@@ -148,6 +183,7 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
             try {
                 withContext(Dispatchers.IO) { aiStore.save(settings,key) }
                 mutable.update { it.copy(aiSettings=aiStore.settings(),aiBusy=false,aiNotice="AI 配置已加密保存。") }
+                refreshAi("AI 配置已加密保存。")
                 if(enableAuto)mode(Mode.AUTO)
             } catch(e: Exception) { mutable.update { it.copy(aiBusy=false,aiNotice=aiError(e)) } }
         }
@@ -160,11 +196,13 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
                 withContext(Dispatchers.IO) { aiStore.save(settings,key) }
                 val credentials=withContext(Dispatchers.IO) { aiStore.credentials() }
                 val message=ai.test(credentials.first,credentials.second)
+                aiStore.markConnected(true)
                 mutable.update { it.copy(aiSettings=credentials.first,aiBusy=false,aiNotice=message) }
-            } catch(e: Exception) { mutable.update { it.copy(aiSettings=aiStore.settings(),aiBusy=false,aiNotice=aiError(e)) } }
+                refreshAi(message)
+            } catch(e: Exception) { aiStore.markConnected(false);mutable.update { it.copy(aiSettings=aiStore.settings(),aiBusy=false,aiNotice=aiError(e)) };refreshAi(aiError(e)) }
         }
     }
-    fun clearAi() { aiSettingsJob?.cancel();queryJob?.cancel();practiceJob?.cancel();aiStore.clear();mode(Mode.OFFLINE);mutable.update { it.copy(aiSettings=AiSettings(),aiBusy=false,aiNotice="AI 配置和密钥已清除。") } }
+    fun clearAi() { aiSettingsJob?.cancel();queryJob?.cancel();practiceJob?.cancel();aiStore.clear();mode(Mode.OFFLINE);mutable.update { it.copy(aiSettings=AiSettings(),aiBusy=false) };refreshAi("AI 配置和密钥已清除。") }
     fun select(index: Int) { if(!state.value.submitted && !state.value.savingAnswer) mutable.update { it.copy(selected=index) } }
     fun submit() {
         val s = state.value
@@ -234,7 +272,7 @@ class AppViewModel @JvmOverloads constructor(application: Application, private v
                 val summary=repo.importUserData(backup)
                 val history=repo.history();val wrong=repo.wrongCount()
                 preparedBackup=null
-                mutable.update { it.copy(history=history,wrongCount=wrong,mode=repo.mode(),theme=repo.theme(),fontSize=repo.fontSize(),automaticUpdates=updates.autoCheckEnabled(),storage=StorageUiState(message="已合并导入 ${summary.history} 条历史、${summary.answers} 条答题记录和 ${summary.wrong} 道错题；重复记录已去重。")) }
+                mutable.update { it.copy(history=history,wrongCount=wrong,skills=skillStore.all(),mode=repo.mode(),theme=repo.theme(),fontSize=repo.fontSize(),automaticUpdates=updates.autoCheckEnabled(),storage=StorageUiState(message="已合并导入 ${summary.history} 条历史、${summary.answers} 条答题记录和 ${summary.wrong} 道错题；重复记录已去重。")) }
             } catch(e: Exception) { mutable.update { it.copy(storage=StorageUiState(message="导入未完成，现有记录已保留，请检查备份后重试。")) } }
         }
     }

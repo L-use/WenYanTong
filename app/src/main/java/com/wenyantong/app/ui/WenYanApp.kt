@@ -88,12 +88,12 @@ private val PagePadding = 24.dp
                     composable("dictionary") { DictionaryPage(state,{nav.popBackStack()},{openEntry(it)},{vm.dictionaryFilter("")}) }
                     composable("classics") { LibraryPage(state,vm,{nav.popBackStack()},{ vm.openArticle(it);go("article") }) { lookup(it.original,it.direction) } }
                     composable("article") { ArticlePage(state) { nav.popBackStack() } }
-                    composable("practice") { PracticeConfig(state,practiceScope,{go("wrong")},vm::cancelPractice) { count,useAi ->
-                        vm.startPractice(practiceScope.split(",").filter(String::isNotBlank).toSet(),count,useAi=useAi) { go("quiz") }
+                    composable("practice") { PracticeConfig(state,practiceScope,{vm.loadWrong();go("wrong")},vm::cancelPractice) { count,useAi,kinds ->
+                        vm.startPractice(practiceScope.split(",").filter(String::isNotBlank).toSet(),count,useAi=useAi,kinds=kinds) { go("quiz") }
                     } }
                     composable("quiz") { QuizPage(state,vm,{nav.popBackStack()},{nav.navigate("report") { popUpTo("quiz") { inclusive=true };launchSingleTop=true }}) }
                     composable("report") { ReportPage(state) { nav.popBackStack("practice",false) } }
-                    composable("wrong") { WrongPage(state,{nav.popBackStack()}) { vm.startPractice(emptySet(),20,true) { go("quiz") } } }
+                    composable("wrong") { WrongPage(state,vm,{nav.popBackStack()}) { vm.startPractice(emptySet(),20,true) { go("quiz") } } }
                     composable("history") { HistoryPage(state,{vm.favorite(it)},{vm.delete(it)}) { lookup(it.query,it.direction) } }
                     composable("settings") { SettingsPage(state,vm,{go(it)}) }
                     composable("resources") { ResourcePage(state,vm,{nav.popBackStack()},{go(it)}) }
@@ -169,10 +169,10 @@ private val PagePadding = 24.dp
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
                 Box {
                     OutlinedButton(onClick={directionMenu=true},shape=RoundedCornerShape(14.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant),contentPadding=PaddingValues(horizontal=12.dp)) {
-                        Icon(Icons.Outlined.Translate,null,Modifier.size(17.dp));Spacer(Modifier.width(8.dp));Text(state.direction.shortTitle,fontSize=12.sp);Icon(Icons.Outlined.ExpandMore,null,Modifier.size(17.dp))
+                        Icon(Icons.Outlined.Translate,null,Modifier.size(17.dp));Spacer(Modifier.width(8.dp));Text(TranslationMode.of(state.direction).title,fontSize=12.sp);Icon(Icons.Outlined.ExpandMore,null,Modifier.size(17.dp))
                     }
-                    DropdownMenu(expanded=directionMenu,onDismissRequest={directionMenu=false}) { Direction.entries.forEach { d ->
-                        DropdownMenuItem(text={Text(d.title)},onClick={vm.direction(d);directionMenu=false},trailingIcon={if(d==state.direction) Icon(Icons.Outlined.Check,null)})
+                    DropdownMenu(expanded=directionMenu,onDismissRequest={directionMenu=false}) { TranslationMode.entries.forEach { d ->
+                        DropdownMenuItem(text={Text(d.title)},onClick={vm.direction(if(d==TranslationMode.ENGLISH)Direction.ZH_TO_EN else Direction.CLASSICAL_TO_ZH);directionMenu=false},trailingIcon={if(d==TranslationMode.of(state.direction)) Icon(Icons.Outlined.Check,null)})
                     } }
                 }
                 Box {
@@ -192,9 +192,9 @@ private val PagePadding = 24.dp
             Paper {
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
                     Eyebrow("开始探索")
-                    Tag("本地资源",Icons.Outlined.VerifiedUser)
+                    if(state.mode==Mode.OFFLINE)Tag("本地资源",Icons.Outlined.VerifiedUser)
                 }
-                OutlinedTextField(value=state.input,onValueChange=vm::input,placeholder={Text(state.direction.hint,fontSize=17.sp,lineHeight=28.sp)},
+                OutlinedTextField(value=state.input,onValueChange=vm::input,placeholder={Text(TranslationMode.of(state.direction).hint,fontSize=17.sp,lineHeight=28.sp)},
                     modifier=Modifier.fillMaxWidth().heightIn(min=110.dp,max=200.dp),textStyle=LocalTextStyle.current.copy(fontSize=state.fontSize.sp,lineHeight=(state.fontSize*1.65).sp),
                     shape=RoundedCornerShape(12.dp),colors=OutlinedTextFieldDefaults.colors(unfocusedBorderColor=Color.Transparent,focusedBorderColor=MaterialTheme.colorScheme.outlineVariant))
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
@@ -254,7 +254,7 @@ private val PagePadding = 24.dp
         if(result==null) { EmptyState("暂时无法查询",state.error ?: "请返回首页重新查询。",Icons.Outlined.SearchOff);return }
         LazyColumn(contentPadding=PaddingValues(PagePadding),verticalArrangement=Arrangement.spacedBy(20.dp)) {
             item {
-                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) { Tag(result.direction.shortTitle);Tag(if(result.passage?.aiGenerated==true)"AI 参考" else "本地资源",Icons.Outlined.VerifiedUser) }
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) { Tag(result.direction.shortTitle);if(state.mode==Mode.OFFLINE)Tag("本地资源",Icons.Outlined.VerifiedUser) else if(result.passage?.aiGenerated==true)Tag("AI 参考") }
             }
             item { Paper {
                 Eyebrow("原文")
@@ -301,9 +301,9 @@ private val PagePadding = 24.dp
                     FlowRow(horizontalArrangement=Arrangement.spacedBy(10.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                         result.entries.forEach { e -> OutlinedButton(onClick={onEntry(e)},shape=RoundedCornerShape(12.dp),modifier=Modifier.heightIn(min=48.dp)) { Text(e.headword,fontSize=21.sp);Spacer(Modifier.width(10.dp));Text(e.pinyin,fontSize=12.sp) } }
                     }
-                    MainButton("围绕这些字词练一练") { practice(result.entries.flatMap { it.linkedIds }) }
                 }
             }
+            item { MainButton(if(result.entries.isNotEmpty())"围绕这些字词练一练" else "围绕本次查询练一练") { practice(result.entries.flatMap { it.linkedIds }) } }
             if(result.alternatives.isNotEmpty()) item {
                 Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
                     SectionTitle("对照版本与来源")
@@ -421,9 +421,10 @@ private val PagePadding = 24.dp
     }
 }
 
-@Composable private fun PracticeConfig(state: AppState, scope: String, wrong:()->Unit, cancel:()->Unit, start:(Int,Boolean)->Unit) {
+@Composable private fun PracticeConfig(state: AppState, scope: String, wrong:()->Unit, cancel:()->Unit, start:(Int,Boolean,Set<QuestionKind>)->Unit) {
     var count by rememberSaveable { mutableIntStateOf(5) }
-    var useAi by rememberSaveable(state.aiSettings.hasKey) { mutableStateOf(state.aiSettings.hasKey) }
+    var useAi by rememberSaveable(state.aiSettings.hasKey,state.mode) { mutableStateOf(state.aiSettings.hasKey && state.mode!=Mode.OFFLINE) }
+    var kinds by remember { mutableStateOf(setOf(QuestionKind.SINGLE)) }
     Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
         Eyebrow("温故 · 知新")
         Text("把理解，\n变成自己的知识。",fontSize=29.sp,lineHeight=40.sp,fontFamily=FontFamily.Serif)
@@ -431,8 +432,8 @@ private val PagePadding = 24.dp
         Paper {
             SectionTitle("练习设置")
             Text("题型",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            Tag("单选题 · 初版已开放",Icons.Outlined.RadioButtonChecked)
-            Text("多选、填空等其他题型将在后续迭代加入。",fontSize=12.sp,lineHeight=20.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) { QuestionKind.entries.forEach { kind -> FilterChip(kind in kinds,{kinds=if(kind in kinds)kinds-kind else kinds+kind},label={Text(kind.title)}) } }
+            Text("可选择多种题型。所有查询均可进入练习；未收录的内容需配置 AI 在线出题。",fontSize=12.sp,lineHeight=20.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
             Text("题目数量",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             FlowRow(horizontalArrangement=Arrangement.spacedBy(10.dp)) { listOf(3,5,10).forEach { n -> FilterChip(selected=count==n,onClick={count=n},label={Text("$n 题")},modifier=Modifier.heightIn(min=48.dp)) } }
@@ -444,7 +445,7 @@ private val PagePadding = 24.dp
             if(state.mode==Mode.OFFLINE && useAi)Text("当前是离线模式，请切换自动或 AI 模式后生成。",fontSize=13.sp)
             if(state.practiceBusy) { LinearProgressIndicator(Modifier.fillMaxWidth());TextButton(onClick=cancel) { Text("取消出题") } }
             if(state.practiceNotice.isNotBlank())Text(state.practiceNotice,fontSize=13.sp,lineHeight=22.sp)
-            MainButton(if(state.practiceBusy)"正在准备练习…" else "开始练习",!state.practiceBusy) { start(count,useAi) }
+            MainButton(if(state.practiceBusy)"正在准备练习…" else "开始练习",!state.practiceBusy && kinds.isNotEmpty()) { start(count,useAi,kinds) }
         }
         Paper(Modifier.clickable(onClick=wrong)) {
             Row(verticalAlignment=Alignment.CenterVertically) { Icon(Icons.Outlined.BookmarkBorder,null,tint=MaterialTheme.colorScheme.primary);Spacer(Modifier.width(12.dp));Column(Modifier.weight(1f)) { Text("我的错题本",fontSize=17.sp);Text("${state.wrongCount} 道待巩固的题目",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant) };Icon(Icons.Outlined.ChevronRight,"查看错题本") }
@@ -463,7 +464,7 @@ private val PagePadding = 24.dp
         if(question==null) { EmptyState("暂无关联题目","示例题库暂未收录此范围的练习，可返回选择综合练习。",Icons.Outlined.School);TextButton(onClick=back,modifier=Modifier.padding(horizontal=24.dp)) { Text("返回练习设置") };return }
         LazyColumn(contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
             item {
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) { Eyebrow(if(question.id.startsWith("ai-"))"AI 生成 · 单选题" else "本地题库 · 单选题");Text("${state.questionIndex+1} / ${state.questions.size}",fontSize=13.sp) }
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) { Eyebrow((if(question.edited)"用户编辑" else if(question.id.startsWith("ai-") && !question.id.startsWith("ai-offline-"))"AI 生成" else "本地题库")+" · "+question.kind.title);Text("${state.questionIndex+1} / ${state.questions.size}",fontSize=13.sp) }
                 Spacer(Modifier.height(14.dp));LinearProgressIndicator(progress={state.questionIndex.toFloat()/state.questions.size},modifier=Modifier.fillMaxWidth().height(5.dp).clip(CircleShape),trackColor=MaterialTheme.colorScheme.surfaceVariant)
             }
             item { Text(question.stem,fontSize=(state.fontSize+3).sp,lineHeight=(state.fontSize*1.9).sp,fontWeight=FontWeight.Medium) }
@@ -513,12 +514,30 @@ private val PagePadding = 24.dp
     }
 }
 
-@Composable private fun WrongPage(state: AppState, back:()->Unit, practice:()->Unit) {
+@Composable private fun WrongPage(state: AppState, vm: AppViewModel, back:()->Unit, practice:()->Unit) {
+    var editing by remember { mutableStateOf<Question?>(null) }
     Column { PageHeader("我的错题本",back)
-        Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
-            if(state.wrongCount==0) EmptyState("暂时没有错题","每次答错的题目都会自动保存在这里。",Icons.Outlined.CheckCircle)
-            else { Text("${state.wrongCount} 道题，值得再看一遍。",fontSize=25.sp,lineHeight=36.sp,fontFamily=FontFamily.Serif);Text("错题保存在本机，复练答对后仍会保留，方便反复温习。",fontSize=14.sp,lineHeight=24.sp,color=MaterialTheme.colorScheme.onSurfaceVariant);MainButton("开始错题复练",onClick=practice) }
+        LazyColumn(contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
+            item { if(state.wrongCount==0) EmptyState("暂时没有错题","每次答错的题目都会自动保存在这里。",Icons.Outlined.CheckCircle)
+            else { Text("${state.wrongCount} 道题，值得再看一遍。",fontSize=25.sp,lineHeight=36.sp,fontFamily=FontFamily.Serif);Text("错题保存在本机，复练答对后仍会保留，方便反复温习。",fontSize=14.sp,lineHeight=24.sp,color=MaterialTheme.colorScheme.onSurfaceVariant);MainButton("开始错题复练",onClick=practice) } }
+            if(state.wrongNotice.isNotBlank())item { Text(state.wrongNotice) }
+            items(state.wrongQuestions,key={it.id}) { q -> Paper(Modifier.testTag("wrong-${q.id}")) { Tag(q.kind.title);Text(q.stem,fontSize=18.sp);Text("正确答案：${q.options.getOrNull(q.answer).orEmpty()}");TextButton(onClick={editing=q}) { Text("编辑错题") } } }
         }
+    }
+    editing?.let { q -> QuestionEditor(q,{editing=null}) { vm.editWrong(it);editing=null } }
+}
+
+@Composable private fun QuestionEditor(question: Question,dismiss:()->Unit,save:(Question)->Unit) {
+    var stem by remember(question.id) { mutableStateOf(question.stem) }
+    var options by remember(question.id) { mutableStateOf(question.options) }
+    var answer by remember(question.id) { mutableIntStateOf(question.answer) }
+    var explanation by remember(question.id) { mutableStateOf(question.explanation) }
+    com.wenyantong.app.core.designsystem.EditorDialog("编辑错题","保存修改",stem.isNotBlank() && explanation.isNotBlank() && options.all { it.isNotBlank() } && options.distinct().size==options.size,dismiss,{save(question.copy(stem=stem,options=options,answer=answer,explanation=explanation,edited=true))}) {
+        OutlinedTextField(stem,{stem=it.take(2000)},label={Text("题干")})
+        options.forEachIndexed { index,value -> Row(verticalAlignment=Alignment.CenterVertically) { RadioButton(answer==index,{answer=index});OutlinedTextField(value,{new -> options=options.mapIndexed { i,v -> if(i==index)new.take(500) else v }},label={Text("选项 ${'A'+index}")},modifier=Modifier.weight(1f)) } }
+        Text("点击圆点设置正确答案。")
+        OutlinedTextField(explanation,{explanation=it.take(16000)},label={Text("答案解析")})
+        Text("修改只影响个人错题，不更改资源包。")
     }
 }
 

@@ -432,15 +432,15 @@ private val PagePadding = 24.dp
         Paper {
             SectionTitle("练习设置")
             Text("题型",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) { QuestionKind.entries.forEach { kind -> FilterChip(kind in kinds,{kinds=if(kind in kinds)kinds-kind else kinds+kind},label={Text(kind.title)}) } }
+            FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) { QuestionKind.entries.forEach { kind -> FilterChip(kind in kinds,{kinds=if(kind in kinds)kinds-kind else kinds+kind},label={Text(kind.title)},enabled=!state.practiceBusy) } }
             Text("可选择多种题型。所有查询均可进入练习；未收录的内容需配置 AI 在线出题。",fontSize=12.sp,lineHeight=20.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
             Text("题目数量",fontSize=13.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            FlowRow(horizontalArrangement=Arrangement.spacedBy(10.dp)) { listOf(3,5,10).forEach { n -> FilterChip(selected=count==n,onClick={count=n},label={Text("$n 题")},modifier=Modifier.heightIn(min=48.dp)) } }
+            FlowRow(horizontalArrangement=Arrangement.spacedBy(10.dp)) { listOf(3,5,10).forEach { n -> FilterChip(selected=count==n,onClick={count=n},label={Text("$n 题")},enabled=!state.practiceBusy,modifier=Modifier.heightIn(min=48.dp)) } }
             Text("题库不足时按实际可用数量组卷。",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
             Row(verticalAlignment=Alignment.CenterVertically) {
                 Checkbox(useAi,{useAi=it},enabled=!state.practiceBusy)
-                Column { Text("AI 根据搜索结果与词库出题");Text(if(state.aiSettings.hasKey)"仅发送相关词义与出处，可能产生 API 费用" else "请先在设置中配置 AI 渠道",fontSize=12.sp) }
+                Column { Text("AI 根据搜索结果与词库出题");Text(if(state.aiSettings.hasKey)"发送本次查询与相关词义；格式不符最多重试一次，可能产生 API 费用" else "请先在设置中配置 AI 渠道",fontSize=12.sp) }
             }
             if(state.mode==Mode.OFFLINE && useAi)Text("当前是离线模式，请切换自动或 AI 模式后生成。",fontSize=13.sp)
             if(state.practiceBusy) { LinearProgressIndicator(Modifier.fillMaxWidth());TextButton(onClick=cancel) { Text("取消出题") } }

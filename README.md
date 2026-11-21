@@ -1,6 +1,6 @@
 # 文言通 WenYanTong
 
-一款采用 Claude 暖白与陶土橙视觉的 Android 学习工具。当前版本 **0.6.0** 提供中英互译、文言白话互译两种入口，支持多题型、任意查询 AI 出题、错题编辑、多 API 管理及用户自建 Skills。保留 14 个厂商预设和 10 个独立在线资源包。操作见 [LEARNING_0.6.0.md](docs/LEARNING_0.6.0.md)。
+一款采用 Claude 暖白与陶土橙视觉的 Android 学习工具。当前版本 **0.6.1** 修复 AI 出题题型不匹配：仅请求所选题型，兼容常见名称，格式不合要求最多重新生成一次。提供中英互译、文言白话互译、多题型、任意查询 AI 出题、错题编辑、多 API 管理及用户自建 Skills；保留 14 个厂商预设和 10 个独立在线资源包。操作见 [LEARNING_0.6.0.md](docs/LEARNING_0.6.0.md)。
 
 源码与下载：[GitHub 仓库](https://github.com/L-use/WenYanTong) · [最新安装包](https://github.com/L-use/WenYanTong/releases/latest)。版本更新规范见 `docs/RELEASING.md`，本地路径与导入导出见 `docs/USER_DATA.md`。
 

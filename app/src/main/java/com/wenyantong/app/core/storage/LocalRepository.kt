@@ -19,6 +19,9 @@ class LocalRepository(private val context: Context) {
     private val personal = PersonalDatabase(context)
     private lateinit var resource: SQLiteDatabase
     private val resourceLock=Any()
+    private val libraries=com.wenyantong.app.feature.resources.LibraryIndex()
+    private var previewCache: List<Entry>?=null
+    private var installedSnapshot=listOf<com.wenyantong.app.feature.resources.PreparedResource>()
     private val resourceStore=com.wenyantong.app.feature.resources.ResourceStore(context)
     private val prefs = context.getSharedPreferences("reading", Context.MODE_PRIVATE)
     lateinit var manifest: JSONObject
@@ -41,23 +44,43 @@ class LocalRepository(private val context: Context) {
             if (file.exists()) check(file.delete())
             check(temporary.renameTo(file)) { "示例资源安装失败。" }
         }
-        val installed=resourceStore.active()
+        val allInstalled=resourceStore.installed()
+        val installed=allInstalled.firstOrNull { it.manifest.getString("id")=="sample.basic" }
         val selected=if(installed!=null && installed.manifest.getInt("revision")>manifest.optInt("revision",0)) installed else null
         synchronized(resourceLock) {
-            if(::resource.isInitialized) resource.close()
+            if(::resource.isInitialized && resource.isOpen) resource.close()
             resource = SQLiteDatabase.openDatabase(selected?.let { File(it.directory,"sample.db").path } ?: file.path, null, SQLiteDatabase.OPEN_READONLY)
             if(selected!=null) manifest=selected.manifest
+            libraries.open(allInstalled.filter { it.manifest.getString("id")!="sample.basic" })
+            installedSnapshot=allInstalled;previewCache=null
         }
         personal.writableDatabase
     }
 
     suspend fun installResource(prepared: com.wenyantong.app.feature.resources.PreparedResource) = withContext(Dispatchers.IO) {
+        resourceStore.activate(prepared)
+        initialize()
+    }
+    suspend fun removeResource(id: String) = withContext(Dispatchers.IO) {
+        synchronized(resourceLock) { libraries.close();if(resource.isOpen)resource.close();resourceStore.remove(id) }
+        initialize()
+    }
+    fun installedPacks()=installedSnapshot.map { val m=it.manifest;com.wenyantong.app.feature.resources.InstalledPack(m.getString("id"),m.optString("title",if(m.getString("id")=="sample.basic")"常用文言文基础库" else m.getString("id")),m.getString("version"),m.getInt("revision"),m.getInt("entryCount"),m.optInt("articleCount"),m.optString("reviewStatus")) }
+    suspend fun entries(): List<Entry> = withContext(Dispatchers.IO) {
         synchronized(resourceLock) {
-            val next=SQLiteDatabase.openDatabase(File(prepared.directory,"sample.db").path,null,SQLiteDatabase.OPEN_READONLY)
-            try { resourceStore.activate(prepared) } catch(e: Exception) { next.close();throw e }
-            val old=resource;resource=next;manifest=prepared.manifest;old.close()
+            previewCache ?: mergeEntries(baseEntries()+libraries.previews(),Int.MAX_VALUE).also { previewCache=it }
         }
     }
+    private fun mergeEntries(rows: List<Entry>, limit: Int): List<Entry> = rows.groupBy { it.headword }.values.map { items ->
+        val first=items.first()
+        val senses=items.flatMap { it.senses }.groupBy { listOf(it.gloss,it.pos,it.example,it.translation) }.values.map { same -> same.first().copy(source=same.map { it.source }.distinct().joinToString("\n\n")) }
+        first.copy(packs=items.flatMap { it.packs }.distinct(),linkedIds=items.flatMap { it.linkedIds }.distinct(),senses=senses.take(limit),totalSenses=items.sumOf { it.totalSenses })
+    }
+    suspend fun entryDetails(word: String, limit: Int=30): Entry? = withContext(Dispatchers.IO) {
+        synchronized(resourceLock) { mergeEntries(baseEntries().filter { it.headword==word }+libraries.details(word,limit),limit).firstOrNull() }
+    }
+    suspend fun articles(packId: String, query: String, offset: Int) = withContext(Dispatchers.IO) { synchronized(resourceLock) { libraries.articles(packId,query,offset) } }
+    suspend fun article(item: LibraryArticle) = withContext(Dispatchers.IO) { synchronized(resourceLock) { libraries.article(item) } }
 
     private fun hash(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -68,7 +91,7 @@ class LocalRepository(private val context: Context) {
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
-    suspend fun entries(): List<Entry> = withContext(Dispatchers.IO) {
+    private fun baseEntries(): List<Entry> =
         synchronized(resourceLock) { resource.rawQuery("SELECT id,headword,pinyin,summary FROM dict_entry ORDER BY rowid", null).use { cursor ->
             buildList {
                 while (cursor.moveToNext()) {
@@ -76,12 +99,13 @@ class LocalRepository(private val context: Context) {
                     val senses = resource.rawQuery("SELECT id,gloss,pos,example,translation,reference FROM dict_sense WHERE entry_id=? ORDER BY rowid", arrayOf(id)).use { sense ->
                         buildList { while (sense.moveToNext()) add(Sense(sense.getString(0),sense.getString(1),sense.getString(2),sense.getString(3),sense.getString(4),sense.getString(5))) }
                     }
-                    add(Entry(id,cursor.getString(1),cursor.getString(2),cursor.getString(3),senses))
+                    val title=if(manifest.getString("version")=="0.1.0")"内置示例库" else "常用文言文基础库"
+                    add(Entry(id,cursor.getString(1),cursor.getString(2),cursor.getString(3),senses.map { it.copy(source=it.source+"\n资源包："+title+"\n项目原创译注 · CC0-1.0") },listOf(title)))
                 }
             }
         }
         }
-    }
+
 
     suspend fun passages(): List<Passage> = withContext(Dispatchers.IO) {
         synchronized(resourceLock) { resource.rawQuery("SELECT id,original,translation,direction,work,analysis,entry_ids FROM passage ORDER BY rowid", null).use { c ->
@@ -97,10 +121,16 @@ class LocalRepository(private val context: Context) {
         val hit = candidates.firstOrNull { it.direction == forward && TextRules.matches(if (reverse) it.translation else it.original, text) }
         val match = hit?.let { if (reverse) it.copy(original=it.translation,translation=it.original,direction=direction) else it }
         val found = if (direction in listOf(Direction.CLASSICAL_TO_ZH,Direction.ZH_TO_CLASSICAL)) {
-            entries().filter { e -> e.id in (hit?.entryIds ?: emptyList()) || (direction == Direction.CLASSICAL_TO_ZH && text.contains(e.headword)) }
+            entries().filter { e -> e.linkedIds.any { it in (hit?.entryIds ?: emptyList()) } || (direction == Direction.CLASSICAL_TO_ZH && text.contains(e.headword)) }
                 .sortedByDescending { it.headword.length }
         } else emptyList()
-        val result = QueryResult(text.trim(),direction,match,found)
+        val extra=synchronized(resourceLock) { libraries.lookup(text,direction) }
+        val allMatches=listOfNotNull(match)+extra
+        val candidateWords=(found+synchronized(resourceLock) { libraries.aliases(text.trim()) }).distinctBy { it.headword }.take(12)
+        val detailed=candidateWords.map { entryDetails(it.headword,12) ?: it }
+        val alternatives=allMatches.groupBy { listOf(it.original,it.translation) }.values.map { same -> same.first().copy(sources=same.flatMap { p -> p.sources.ifEmpty { listOf(p.work+"\n常用/内置示例库 · 项目原创译注 CC0-1.0") } }.distinct()) }
+        val chosen=alternatives.firstOrNull()
+        val result = QueryResult(text.trim(),direction,chosen,detailed,alternatives)
         saveHistory(result.query,direction)
         result
     }
@@ -194,7 +224,7 @@ class LocalRepository(private val context: Context) {
     fun theme() = prefs.getString("theme","system") ?: "system"
     fun fontSize() = prefs.getFloat("fontSize",18f)
     fun setReading(theme: String, font: Float) { prefs.edit { putString("theme",theme);putFloat("fontSize",font) } }
-    fun close() { if (::resource.isInitialized) resource.close();personal.close() }
+    fun close() { synchronized(resourceLock) { libraries.close();if (::resource.isInitialized && resource.isOpen) resource.close();personal.close() } }
 }
 
 private fun JSONArray.strings() = (0 until length()).map { getString(it) }

@@ -16,6 +16,10 @@ import java.util.zip.ZipOutputStream
 
 @RunWith(AndroidJUnit4::class)
 class ResourceUpdateTest {
+    private var savedInstalled: String?=null
+    private var savedActive: String?=null
+    @org.junit.Before fun isolate() { val p=context.getSharedPreferences("resource_updates",0);savedInstalled=p.getString("installed",null);savedActive=p.getString("active",null);p.edit().clear().commit() }
+    @org.junit.After fun restore() { context.getSharedPreferences("resource_updates",0).edit().clear().putString("installed",savedInstalled).putString("active",savedActive).commit() }
     private val context=InstrumentationRegistry.getInstrumentation().targetContext
     private fun archive(revision: Int=1, extra: String?=null, badHash: Boolean=false): ByteArray {
         val m=JSONObject(context.assets.open("packs/manifest.json").bufferedReader().use { it.readText() })

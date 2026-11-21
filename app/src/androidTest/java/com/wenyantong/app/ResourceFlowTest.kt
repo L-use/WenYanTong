@@ -14,7 +14,7 @@ class ResourceFlowTest {
         compose.onNodeWithText("检查资源更新").performScrollTo().performClick()
         compose.onNodeWithText("连接 GitHub 检查资源？").assertIsDisplayed()
         compose.onNodeWithText("取消").performClick()
-        compose.onNodeWithText("查看词条").performScrollTo().performClick()
+        compose.onNodeWithText("全局查词").performScrollTo().performClick()
         compose.onNodeWithText("古汉语词典").assertExists()
     }
     @Test fun downloadPublishedLibraryAndBrowseNewEntry() {
@@ -22,10 +22,10 @@ class ResourceFlowTest {
         openResources()
         compose.onNodeWithText("检查资源更新").performScrollTo().performClick()
         compose.onNodeWithText("允许检查").performClick()
-        compose.waitUntil(60_000) { compose.onAllNodesWithText("下载并安装资源包").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("下载并安装资源包").performScrollTo().performClick()
-        compose.waitUntil(60_000) { compose.onAllNodesWithText("资源库安装成功，词典、古文和练习已更新。").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("查看词条").performScrollTo().performClick()
+        compose.waitUntil(60_000) { compose.onAllNodesWithTag("resource-sample.basic").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("下载此包") and hasAnyAncestor(hasTestTag("resource-sample.basic"))).performScrollTo().performClick()
+        compose.waitUntil(60_000) { compose.onAllNodesWithText("资源包安装成功，已加入全局搜索。").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("全局查词").performScrollTo().performClick()
         compose.onNode(hasSetTextAction()).performTextInput("濯")
         compose.onNodeWithText("zhuó").performScrollTo().performClick()
         compose.onAllNodesWithText("洗涤。").onFirst().assertExists()
@@ -36,10 +36,33 @@ class ResourceFlowTest {
         File(folder,"14-downloaded-resource-entry.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it) }
         bitmap.recycle()
     }
+    @Test fun downloadLargeIndependentProsePackSearchAndRead() {
+        org.junit.Assume.assumeTrue(InstrumentationRegistry.getArguments().getString("liveLargeUi")=="true")
+        openResources()
+        compose.onNodeWithText("检查资源更新").performScrollTo().performClick()
+        compose.onNodeWithText("允许检查").performClick()
+        compose.waitUntil(60_000) { compose.onAllNodesWithTag("resource-reading.guwenguanzhi").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("下载此包") and hasAnyAncestor(hasTestTag("resource-reading.guwenguanzhi"))).performScrollTo().performClick()
+        compose.waitUntil(120_000) { compose.onAllNodesWithText("资源包安装成功，已加入全局搜索。").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("全局查词").performScrollTo().performClick()
+        compose.onNode(hasSetTextAction()).performTextInput("学者")
+        compose.onNodeWithContentDescription("查看学者的释义").performScrollTo().performClick()
+        compose.onAllNodesWithText("查看完整来源").onFirst().performClick()
+        compose.onAllNodesWithText("上游 AI 生成",substring=true).onFirst().assertExists()
+        compose.onNodeWithContentDescription("关闭释义").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("返回").performClick()
+        compose.onNode(hasText("浏览此包") and hasAnyAncestor(hasTestTag("resource-reading.guwenguanzhi"))).performScrollTo().performClick()
+        compose.waitUntil(20_000) { compose.onAllNodesWithText("加载更多篇目").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasSetTextAction()).performTextInput("师说")
+        compose.waitUntil(20_000) { compose.onAllNodesWithText("师说").fetchSemanticsNodes().size>1 }
+        compose.onNode(hasText("师说") and hasClickAction()).performClick()
+        compose.waitUntil(20_000) { compose.onAllNodesWithText("古文阅读").fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText("古之学者必有师",substring=true).onFirst().assertExists()
+    }
     private fun openResources() {
         compose.waitUntil(15_000) { compose.onAllNodesWithText("开始探索").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("设置").performClick()
         compose.onNodeWithText("离线资源").performScrollTo().performClick()
-        compose.onNodeWithText("常用文言文基础库").assertExists()
+        compose.onNodeWithText("检查资源更新").assertExists()
     }
 }

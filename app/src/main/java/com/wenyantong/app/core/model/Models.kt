@@ -8,9 +8,12 @@ enum class Direction(val title: String, val shortTitle: String, val hint: String
 }
 enum class Mode(val label: String) { AUTO("自动"), AI("AI"), OFFLINE("离线") }
 data class Sense(val id: String, val gloss: String, val pos: String, val example: String, val translation: String, val source: String)
-data class Entry(val id: String, val headword: String, val pinyin: String, val summary: String, val senses: List<Sense>)
-data class Passage(val id: String, val original: String, val translation: String, val direction: Direction, val work: String, val analysis: String, val entryIds: List<String>)
-data class QueryResult(val query: String, val direction: Direction, val passage: Passage?, val entries: List<Entry>) {
+data class Entry(val id: String, val headword: String, val pinyin: String, val summary: String, val senses: List<Sense>, val packs: List<String> = emptyList(), val linkedIds: List<String> = listOf(id), val totalSenses: Int = senses.size)
+data class Passage(val id: String, val original: String, val translation: String, val direction: Direction, val work: String, val analysis: String, val entryIds: List<String>, val sources: List<String> = emptyList())
+
+data class LibraryArticle(val id: String, val packId: String, val title: String, val author: String, val dynasty: String)
+data class ArticleText(val title: String, val author: String, val original: String, val translation: String, val notes: String, val source: String)
+data class QueryResult(val query: String, val direction: Direction, val passage: Passage?, val entries: List<Entry>, val alternatives: List<Passage> = emptyList()) {
     val hasMatch get() = passage != null || entries.isNotEmpty()
 }
 data class HistoryItem(val id: Long, val query: String, val direction: Direction, val timestamp: Long, val favorite: Boolean)

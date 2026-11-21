@@ -1,6 +1,6 @@
 # 文言通 WenYanTong
 
-一款采用 Claude 暖白与陶土橙视觉的 Android 古文学习工具。当前版本 **0.3.0** 加入独立资源检查更新、下载安装及本地 ZIP 导入，按详细设计说明书分阶段实现。
+一款采用 Claude 暖白与陶土橙视觉的 Android 古文学习工具。当前版本 **0.4.0** 支持资源包自由选择、单独下载更新删除、全局查词及来源展示。
 
 源码与下载：[GitHub 仓库](https://github.com/L-use/WenYanTong) · [最新安装包](https://github.com/L-use/WenYanTong/releases/latest)。版本更新规范见 `docs/RELEASING.md`，本地路径与导入导出见 `docs/USER_DATA.md`。
 
@@ -18,10 +18,13 @@
 - 查看实际安装/数据路径，使用系统文件选择器导出 JSON 学习备份，预览并合并导入，重复记录去重。
 - 离线资源页独立检查、下载、校验并安装基础资源库，安装后即时查看词条、古文并用于练习。支持本地 ZIP 导入，失败保留原库，个人数据独立保存。
 - 可下载常用基础库 1.0.0：32 词条、36 义项、35 组文本对照、34 道单选题。保留原内置示例，无网络也能使用。
+- 8 个独立可选包：基础库、说文、古文观止译注、CCTC 对照、经籍、史籍、资治通鉴、通假字；各包独立更新和删除，旧基础库自动迁移。
+- 全局查词覆盖已下载包，同字聚合并保留不同释义/译文及其出处；大包释义按需加载，古文篇目分页搜索、长篇正文分段显示。
+- 古文观止译注包有 222 篇、13,717 个不同字词，现代译注由上游 AI 生成，明确标注；原文包不假装提供白话译文。来源与授权见 `docs/USER_RESOURCE_COLLECTION.md`。
 
 ## 当前边界
 
-无需登录、API Key 或 GitHub 配置。联网权限用于应用和资源更新；学习查询仍使用本地资源。尚未实现云端 AI、OCR、多资源库并存、多选等其余六种题型、收藏分类与完整的 34 页视觉稿。
+无需登录、API Key 或 GitHub 配置。联网权限用于应用和资源更新；学习查询仍使用本地资源。尚未实现云端 AI、OCR、多选等其余六种题型、收藏分类与完整的 34 页视觉稿。
 
 示例库用于功能体验，释义、译文和题目为项目原创内容，尚未经学术审校。双语资源仅包含“你好。”和“温故知新。”两组，不提供任意文本翻译。古文反向查询需输入已收录的对应译文。
 
@@ -56,7 +59,7 @@ GitHub 发布包关闭调试功能，并保持固定签名身份以支持覆盖�
 python tools/pack-builder/build.py
 ```
 
-输入是 `tools/pack-builder/sample.json`，版本配置为 `tools/pack-builder/resource.json`。输出 `dist/resource-build/{sample.db,manifest.json}`、`dist/resources/common-basic-版本.zip` 和 `resources.json`，不会改动内置示例库。校验后提交源码，运行 `python tools/pack-builder/publish.py` 独立发布；无需 Actions。详细格式、步骤和校验机制见 `docs/RESOURCE_PACK.md`，内容来源见 `docs/RESOURCE_SOURCES.md`。
+基础库输入是 `tools/pack-builder/sample.json`，其他包见 `tools/pack-builder/build_user_resources.py`、`build_shuowen.py`。多包发布运行 `python tools/release/publish_catalog.py`，独立上传版本 ZIP，最后更新 `resources-v2` 目录；无需 Actions。完整说明见 `docs/MULTIPACK_RELEASE.md`。`tools/pack-builder/publish.py` 仅维护旧版单库渠道。
 
 ## 测试与后续迭代
 

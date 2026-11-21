@@ -30,12 +30,17 @@ data class AppState(
     val questionIndex: Int = 0, val submitted: Boolean = false, val selected: Int? = null,
     val savingAnswer: Boolean = false, val practiceFinished: Boolean = false, val wrongCount: Int = 0,
     val update: UpdateUiState = UpdateUiState(), val automaticUpdates: Boolean = true,
+    val resourceVersion: String = "", val resourceRevision: Int = 0, val resourceQuestions: Int = 0,
+    val resourceBusy: Boolean = false, val resourceMessage: String = "", val resourceDownloaded: Long = 0,
+    val resourceOffer: com.wenyantong.app.feature.resources.ResourceOffer? = null,
     val storage: StorageUiState = StorageUiState()
 )
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = LocalRepository(application)
     private val updates = UpdateRepository(application)
+    private val resources=com.wenyantong.app.feature.resources.ResourceStore(application)
+    private var resourceJob: Job?=null
     private val mutable = MutableStateFlow(AppState(mode=repo.mode(),theme=repo.theme(),fontSize=repo.fontSize(),automaticUpdates=updates.autoCheckEnabled()))
     val state = mutable.asStateFlow()
     private var queryJob: Job? = null
@@ -50,7 +55,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             runCatching {
                 repo.initialize()
                 val entries = repo.entries();val passages = repo.passages();val history = repo.history();val wrong = repo.wrongCount()
-                mutable.update { it.copy(ready=true,entries=entries,passages=passages,history=history,wrongCount=wrong) }
+                mutable.update { it.copy(ready=true,entries=entries,passages=passages,history=history,wrongCount=wrong,resourceVersion=repo.manifest.getString("version"),resourceRevision=repo.manifest.optInt("revision",0),resourceQuestions=repo.manifest.getInt("questionCount")) }
                 maybeCheckUpdate()
             }.onFailure { mutable.update { s -> s.copy(error=it.message ?: "本地资源加载失败") } }
         }
@@ -201,6 +206,52 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         updateJob?.cancel();updateJob=null
         mutable.update { it.copy(update=UpdateUiState(UpdatePhase.AVAILABLE,it.update.info,message="下载已取消，可以重新下载。")) }
     }
+    fun checkResources() {
+        if(resourceJob?.isActive==true)return
+        mutable.update { it.copy(resourceBusy=true,resourceMessage="正在检查资源更新…",resourceOffer=null) }
+        resourceJob=viewModelScope.launch {
+            try {
+                val offer=resources.check()
+                mutable.update { it.copy(resourceBusy=false,resourceOffer=offer.takeIf { o -> o.revision>it.resourceRevision },resourceMessage=if(offer.revision>it.resourceRevision)"发现新资源库" else "已是最新资源库") }
+            } catch(e: kotlinx.coroutines.CancellationException) { throw e }
+            catch(e: Exception) { mutable.update { it.copy(resourceBusy=false,resourceMessage=updateError(e)) } }
+        }
+    }
+    fun downloadResource() {
+        val offer=state.value.resourceOffer ?: return
+        if(resourceJob?.isActive==true)return
+        mutable.update { it.copy(resourceBusy=true,resourceDownloaded=0,resourceMessage="正在下载资源包…") }
+        resourceJob=viewModelScope.launch {
+            try {
+                val file=resources.download(offer) { bytes -> mutable.update { it.copy(resourceDownloaded=bytes) } }
+                try {
+                    val prepared=withContext(Dispatchers.IO) { file.inputStream().use { resources.prepare(it,state.value.resourceRevision,offer) } }
+                    applyResource(prepared)
+                } finally { file.delete() }
+            } catch(e: kotlinx.coroutines.CancellationException) { throw e }
+            catch(e: Exception) { mutable.update { it.copy(resourceBusy=false,resourceMessage=updateError(e)) } }
+        }
+    }
+    fun importResource(uri: Uri) {
+        if(resourceJob?.isActive==true)return
+        mutable.update { it.copy(resourceBusy=true,resourceMessage="正在校验本地资源包…") }
+        resourceJob=viewModelScope.launch {
+            try {
+                val prepared=withContext(Dispatchers.IO) { getApplication<Application>().contentResolver.openInputStream(uri)?.use { resources.prepare(it,state.value.resourceRevision) } ?: error("无法读取资源包。") }
+                applyResource(prepared)
+            } catch(e: kotlinx.coroutines.CancellationException) { throw e }
+            catch(e: Exception) { mutable.update { it.copy(resourceBusy=false,resourceMessage=e.message ?: "资源导入失败") } }
+        }
+    }
+    private suspend fun applyResource(prepared: com.wenyantong.app.feature.resources.PreparedResource) = withContext(kotlinx.coroutines.NonCancellable) {
+        queryJob?.cancel();queryJob?.join()
+        repo.installResource(prepared)
+        val entries=repo.entries();val passages=repo.passages()
+        mutable.update { it.copy(entries=entries,passages=passages,result=null,questions=emptyList(),answers=emptyList(),busy=false,
+            resourceVersion=repo.manifest.getString("version"),resourceRevision=repo.manifest.getInt("revision"),resourceQuestions=repo.manifest.getInt("questionCount"),
+            resourceBusy=false,resourceOffer=null,resourceMessage="资源库安装成功，词典、古文和练习已更新。") }
+    }
+    fun cancelResource() { resourceJob?.cancel();mutable.update { it.copy(resourceBusy=false,resourceMessage="已取消，可以重试。") } }
     private fun updateError(error: Exception): String = when(error) {
         is java.net.SocketTimeoutException -> "连接 GitHub 超时，请稍后重试。"
         is java.io.IOException -> "无法连接 GitHub，请检查网络后重试。"

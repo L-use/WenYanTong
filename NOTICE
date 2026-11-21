@@ -1,4 +1,4 @@
-WenYanTong 0.1.0
+WenYanTong 0.3.0
 
 Application code: MIT (see LICENSE).
 Original sample glosses, translations, analysis and questions in
@@ -9,6 +9,14 @@ Ancient source text excerpts are public-domain works:
 - Lunyu / Analects: Xue Er 1.1; Wei Zheng 2.11, 2.15, 2.17; Li Ren 4.15.
 - Zhou Dunyi: Ai Lian Shuo.
 - Peng Duanshu: Wei Xue Yi Shou Shi Zi Zhi.
+- Zhuge Liang: Jie Zi Shu; Chu Shi Biao.
+- Liu Yuxi: Lou Shi Ming.
+- Fan Zhongyan: Yue Yang Lou Ji.
+- Han Yu: Ma Shuo; Ouyang Xiu: Zui Weng Ting Ji.
+- Tao Yuanming: Tao Hua Yuan Ji.
+- Mengzi: Jin Xin Xia; Zuo Zhuan: Zhuang Gong year 10.
+- Additional Analects chapters: Shu Er 7.22; Yan Yuan 12.2; Xue Er 1.4.
+Online comparison sources and editorial scope: docs/RESOURCE_SOURCES.md.
 No modern commercial edition, commentary, translation or font is bundled.
 Original project translations are instructional samples, not a reviewed edition.
 

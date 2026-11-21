@@ -1,6 +1,6 @@
 # 文言通 WenYanTong
 
-一款采用 Claude 暖白与陶土橙视觉的 Android 古文学习工具。当前版本 **0.2.0** 加入 GitHub 稳定版更新与用户数据备份，按详细设计说明书分阶段实现。
+一款采用 Claude 暖白与陶土橙视觉的 Android 古文学习工具。当前版本 **0.3.0** 加入独立资源检查更新、下载安装及本地 ZIP 导入，按详细设计说明书分阶段实现。
 
 源码与下载：[GitHub 仓库](https://github.com/L-use/WenYanTong) · [最新安装包](https://github.com/L-use/WenYanTong/releases/latest)。版本更新规范见 `docs/RELEASING.md`，本地路径与导入导出见 `docs/USER_DATA.md`。
 
@@ -16,10 +16,12 @@
 - 自动、AI、离线模式偏好保存。初版所有模式实际均只查询本地资源，界面明确提示。
 - 应用内检查 GitHub 发布、展示说明、下载安装；哈希、包名、版本与签名校验。允许联网时每天最多自动检查一次，离线手动检查需确认。
 - 查看实际安装/数据路径，使用系统文件选择器导出 JSON 学习备份，预览并合并导入，重复记录去重。
+- 离线资源页独立检查、下载、校验并安装基础资源库，安装后即时查看词条、古文并用于练习。支持本地 ZIP 导入，失败保留原库，个人数据独立保存。
+- 可下载常用基础库 1.0.0：32 词条、36 义项、35 组文本对照、34 道单选题。保留原内置示例，无网络也能使用。
 
 ## 当前边界
 
-无需登录、API Key 或 GitHub 配置。联网权限仅用于已实现的 GitHub 更新渠道；学习查询仍使用本地资源。尚未实现云端 AI、OCR、独立资源包在线更新、多选等其余六种题型、收藏分类与完整的 34 页视觉稿。
+无需登录、API Key 或 GitHub 配置。联网权限用于应用和资源更新；学习查询仍使用本地资源。尚未实现云端 AI、OCR、多资源库并存、多选等其余六种题型、收藏分类与完整的 34 页视觉稿。
 
 示例库用于功能体验，释义、译文和题目为项目原创内容，尚未经学术审校。双语资源仅包含“你好。”和“温故知新。”两组，不提供任意文本翻译。古文反向查询需输入已收录的对应译文。
 
@@ -54,7 +56,7 @@ GitHub 发布包关闭调试功能，并保持固定签名身份以支持覆盖�
 python tools/pack-builder/build.py
 ```
 
-输入是 `tools/pack-builder/sample.json`，输出是 `app/src/main/assets/packs/{sample.db,manifest.json}` 和 `dist/resources/sample-basic-0.1.0.zip`。脚本检查 SQLite 完整性、外键与答案索引，并生成实际哈希、文件大小和内容计数。此 ZIP 是初版示例构建产物，尚无在线安装器或签名索引。
+输入是 `tools/pack-builder/sample.json`，版本配置为 `tools/pack-builder/resource.json`。输出 `dist/resource-build/{sample.db,manifest.json}`、`dist/resources/common-basic-版本.zip` 和 `resources.json`，不会改动内置示例库。校验后提交源码，运行 `python tools/pack-builder/publish.py` 独立发布；无需 Actions。详细格式、步骤和校验机制见 `docs/RESOURCE_PACK.md`，内容来源见 `docs/RESOURCE_SOURCES.md`。
 
 ## 测试与后续迭代
 
@@ -62,6 +64,6 @@ python tools/pack-builder/build.py
 
 0.1.0 初版的历史验证记录见 `docs/VALIDATION.md`；0.2.0 的发布与新增功能验证另见 `docs/VALIDATION_0.2.0.md`。实际截图和本机构建日志在被 Git 排除的 `dist/`。尚未进行真机、多系统版本与横屏验证。
 
-架构与阶段记录见 `docs/ARCHITECTURE.md`、`docs/CHANGELOG.md`、`docs/TEST_PLAN.md`。下一阶段扩充资源 schema 和独立包安装，再接入 AI；不把规划能力写成已实现能力。
+架构与阶段记录见 `docs/ARCHITECTURE.md`、`docs/CHANGELOG.md`、`docs/TEST_PLAN.md`。下一阶段可继续扩充资源内容与多包支持，再接入 AI。
 
 源码采用 MIT；原创示例内容采用 CC0-1.0；古籍原文为公有领域。第三方依赖见 NOTICE。

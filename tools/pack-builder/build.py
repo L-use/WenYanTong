@@ -12,11 +12,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "tools/pack-builder/sample.json"
-OUTPUT = ROOT / "app/src/main/assets/packs"
+OUTPUT = ROOT / "dist/resource-build"
 
 
 def build():
     data = json.loads(SOURCE.read_text(encoding="utf-8"))
+    for section in ("entries", "passages", "questions"):
+        ids = [row["id"] for row in data[section]]
+        if len(ids) != len(set(ids)): raise ValueError(f"Duplicate IDs in {section}")
+    ids = {entry["id"] for entry in data["entries"]}
+    for passage in data["passages"]:
+        if not set(passage["entryIds"]) <= ids: raise ValueError("Unresolved passage link")
+        if passage["direction"] not in ("CLASSICAL_TO_ZH", "ZH_TO_EN"): raise ValueError("Invalid direction")
     OUTPUT.mkdir(parents=True, exist_ok=True)
     temporary = OUTPUT / "sample.tmp.db"
     temporary.unlink(missing_ok=True)
@@ -42,7 +49,7 @@ def build():
         normalized = ''.join(c for c in p["original"].strip().lower() if not c.isspace() and c not in punctuation)
         db.execute("INSERT INTO passage VALUES(?,?,?,?,?,?,?,?)", (p["id"], p["original"], p["translation"], p["direction"], p["work"], p["analysis"], json.dumps(p["entryIds"]), normalized))
     for q in data["questions"]:
-        assert len(q["options"]) >= 2 and 0 <= q["answer"] < len(q["options"])
+        if not (2 <= len(q["options"]) <= 8 and 0 <= q["answer"] < len(q["options"])): raise ValueError("Invalid answer")
         db.execute("INSERT INTO question VALUES(?,?,?,?,?,?)", (q["id"], q["stem"], json.dumps(q["options"], ensure_ascii=False), q["answer"], q["explanation"], q["entryId"]))
     assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     assert not db.execute("PRAGMA foreign_key_check").fetchall()
@@ -50,17 +57,25 @@ def build():
     db.close()
     target = OUTPUT / "sample.db"
     temporary.replace(target)
-    manifest = dict(id="sample.basic", type="sample", version="0.1.0", schemaVersion=1,
-                    minAppVersion="0.1.0", database="sample.db", license="CC0-1.0; public-domain ancient texts",
+    config = json.loads((ROOT / "tools/pack-builder/resource.json").read_text(encoding="utf-8"))
+    manifest = dict(id="sample.basic", type="base", version=config["version"], revision=config["revision"], schemaVersion=1,
+                    minAppVersionCode=3, minAppVersion="0.3.0", database="sample.db", license="CC0-1.0; public-domain ancient texts",
                     source="tools/pack-builder/sample.json", reviewStatus="原创教学示例，未经学术审校",
                     entryCount=len(data["entries"]), passageCount=len(data["passages"]), questionCount=len(data["questions"]),
                     files=[dict(path=target.name, sha256=hashlib.sha256(target.read_bytes()).hexdigest(), bytes=target.stat().st_size)])
     (OUTPUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     export = ROOT / "dist/resources"
     export.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(export / "sample-basic-0.1.0.zip", "w", zipfile.ZIP_DEFLATED) as package:
-        package.write(target, target.name)
-        package.write(OUTPUT / "manifest.json", "manifest.json")
+    with zipfile.ZipFile(export / f'common-basic-{config["version"]}.zip', "w", zipfile.ZIP_DEFLATED) as package:
+        for path in (target, OUTPUT / "manifest.json"):
+            info = zipfile.ZipInfo(path.name, (2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            package.writestr(info, path.read_bytes())
+    archive = export / f'common-basic-{config["version"]}.zip'
+    index = dict(schemaVersion=1,id="sample.basic",version=config["version"],revision=config["revision"],minAppVersionCode=3,
+                 url=f'https://github.com/L-use/WenYanTong/releases/download/resource-{config["version"]}/{archive.name}',
+                 bytes=archive.stat().st_size,sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),notes=config["notes"])
+    (export / "resources.json").write_text(json.dumps(index,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(manifest, ensure_ascii=True, indent=2))
 
 

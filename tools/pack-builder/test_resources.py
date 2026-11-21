@@ -31,7 +31,7 @@ class SampleResourcesTest(unittest.TestCase):
             self.assertTrue(0 <= question["answer"] < len(question["options"]))
 
     def test_manifest_hash_matches_database_and_sqlite_constraints_hold(self):
-        assets = ROOT / "app/src/main/assets/packs"
+        assets = ROOT / "dist/resource-build"
         manifest = json.loads((assets / "manifest.json").read_text(encoding="utf-8"))
         database = assets / manifest["database"]
         self.assertEqual(manifest["files"][0]["sha256"], hashlib.sha256(database.read_bytes()).hexdigest())

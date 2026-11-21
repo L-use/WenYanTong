@@ -1,41 +1,1410 @@
 {
   "entries": [
-    {"id":"zhi","headword":"之","pinyin":"zhī","summary":"常见文言虚词，也可作动词。需结合上下文辨析。","senses":[
-      {"id":"zhi-pronoun","gloss":"代指前文提到的人、事或物。","pos":"代词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"},
-      {"id":"zhi-de","gloss":"用于定语和中心语之间，相当于“的”。","pos":"助词","example":"夫子之道，忠恕而已矣。","translation":"老师的道，不过是忠与恕罢了。","source":"《论语·里仁》4.15"},
-      {"id":"zhi-go","gloss":"到，往。","pos":"动词","example":"吾欲之南海，何如？","translation":"我想前往南海，你觉得怎样？","source":"彭端淑《为学一首示子侄》"},
-      {"id":"zhi-structure","gloss":"用于主语和谓语之间，取消句子独立性。","pos":"助词","example":"予独爱莲之出淤泥而不染。","translation":"我唯独喜爱莲花从淤泥中生长出来，却不沾染污秽。","source":"周敦颐《爱莲说》"}
-    ]},
-    {"id":"xue","headword":"学","pinyin":"xué","summary":"学习、求学。","senses":[{"id":"xue-learn","gloss":"学习，获取知识。","pos":"动词","example":"学而不思则罔，思而不学则殆。","translation":"学习却不思考就会迷惑，思考却不学习就会疑惑。","source":"《论语·为政》2.15"}]},
-    {"id":"shi","headword":"时","pinyin":"shí","summary":"时间；按时，时常。","senses":[{"id":"shi-often","gloss":"按一定的时候；时常。","pos":"副词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"}]},
-    {"id":"xi","headword":"习","pinyin":"xí","summary":"温习，练习。","senses":[{"id":"xi-review","gloss":"温习、反复练习所学的内容。","pos":"动词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"}]},
-    {"id":"yue","headword":"说","pinyin":"yuè / shuō","summary":"在“不亦说乎”中读 yuè，通“悦”。","senses":[{"id":"yue-happy","gloss":"通“悦”，愉快、高兴；此义读 yuè。","pos":"形容词","example":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","source":"《论语·学而》1.1"}]},
-    {"id":"er","headword":"而","pinyin":"ér","summary":"连接词语或分句，具体关系由上下文决定。","senses":[{"id":"er-turn","gloss":"表示转折，可译为“却”。","pos":"连词","example":"人不知而不愠，不亦君子乎？","translation":"别人不了解自己，自己却不恼怒，不也是有修养的人吗？","source":"《论语·学而》1.1"},{"id":"er-sequence","gloss":"连接前后动作，可表承接。","pos":"连词","example":"温故而知新，可以为师矣。","translation":"温习旧的知识并获得新的理解，就可以做老师了。","source":"《论语·为政》2.11"}]},
-    {"id":"gu","headword":"故","pinyin":"gù","summary":"旧的事物或知识；原因等。","senses":[{"id":"gu-old","gloss":"旧的知识、已经学过的内容。","pos":"名词","example":"温故而知新，可以为师矣。","translation":"温习旧的知识并获得新的理解，就可以做老师了。","source":"《论语·为政》2.11"}]},
-    {"id":"zhi-know","headword":"知","pinyin":"zhī","summary":"知道，了解，理解。","senses":[{"id":"zhi-know-understand","gloss":"知道、了解。","pos":"动词","example":"知之为知之，不知为不知，是知也。","translation":"知道就承认知道，不知道就承认不知道，这才是明智的。","source":"《论语·为政》2.17"}]}
+    {
+      "id": "zhi",
+      "headword": "之",
+      "pinyin": "zhī",
+      "summary": "常见文言虚词，也可作动词。需结合上下文辨析。",
+      "senses": [
+        {
+          "id": "zhi-pronoun",
+          "gloss": "代指前文提到的人、事或物。",
+          "pos": "代词",
+          "example": "学而时习之，不亦说乎？",
+          "translation": "学习后时常温习所学的内容，不也令人愉快吗？",
+          "source": "《论语·学而》1.1"
+        },
+        {
+          "id": "zhi-de",
+          "gloss": "用于定语和中心语之间，相当于“的”。",
+          "pos": "助词",
+          "example": "夫子之道，忠恕而已矣。",
+          "translation": "老师的道，不过是忠与恕罢了。",
+          "source": "《论语·里仁》4.15"
+        },
+        {
+          "id": "zhi-go",
+          "gloss": "到，往。",
+          "pos": "动词",
+          "example": "吾欲之南海，何如？",
+          "translation": "我想前往南海，你觉得怎样？",
+          "source": "彭端淑《为学一首示子侄》"
+        },
+        {
+          "id": "zhi-structure",
+          "gloss": "用于主语和谓语之间，取消句子独立性。",
+          "pos": "助词",
+          "example": "予独爱莲之出淤泥而不染。",
+          "translation": "我唯独喜爱莲花从淤泥中生长出来，却不沾染污秽。",
+          "source": "周敦颐《爱莲说》"
+        }
+      ]
+    },
+    {
+      "id": "xue",
+      "headword": "学",
+      "pinyin": "xué",
+      "summary": "学习、求学。",
+      "senses": [
+        {
+          "id": "xue-learn",
+          "gloss": "学习，获取知识。",
+          "pos": "动词",
+          "example": "学而不思则罔，思而不学则殆。",
+          "translation": "学习却不思考就会迷惑，思考却不学习就会疑惑。",
+          "source": "《论语·为政》2.15"
+        }
+      ]
+    },
+    {
+      "id": "shi",
+      "headword": "时",
+      "pinyin": "shí",
+      "summary": "时间；按时，时常。",
+      "senses": [
+        {
+          "id": "shi-often",
+          "gloss": "按一定的时候；时常。",
+          "pos": "副词",
+          "example": "学而时习之，不亦说乎？",
+          "translation": "学习后时常温习所学的内容，不也令人愉快吗？",
+          "source": "《论语·学而》1.1"
+        }
+      ]
+    },
+    {
+      "id": "xi",
+      "headword": "习",
+      "pinyin": "xí",
+      "summary": "温习，练习。",
+      "senses": [
+        {
+          "id": "xi-review",
+          "gloss": "温习、反复练习所学的内容。",
+          "pos": "动词",
+          "example": "学而时习之，不亦说乎？",
+          "translation": "学习后时常温习所学的内容，不也令人愉快吗？",
+          "source": "《论语·学而》1.1"
+        }
+      ]
+    },
+    {
+      "id": "yue",
+      "headword": "说",
+      "pinyin": "yuè / shuō",
+      "summary": "在“不亦说乎”中读 yuè，通“悦”。",
+      "senses": [
+        {
+          "id": "yue-happy",
+          "gloss": "通“悦”，愉快、高兴；此义读 yuè。",
+          "pos": "形容词",
+          "example": "学而时习之，不亦说乎？",
+          "translation": "学习后时常温习所学的内容，不也令人愉快吗？",
+          "source": "《论语·学而》1.1"
+        }
+      ]
+    },
+    {
+      "id": "er",
+      "headword": "而",
+      "pinyin": "ér",
+      "summary": "连接词语或分句，具体关系由上下文决定。",
+      "senses": [
+        {
+          "id": "er-turn",
+          "gloss": "表示转折，可译为“却”。",
+          "pos": "连词",
+          "example": "人不知而不愠，不亦君子乎？",
+          "translation": "别人不了解自己，自己却不恼怒，不也是有修养的人吗？",
+          "source": "《论语·学而》1.1"
+        },
+        {
+          "id": "er-sequence",
+          "gloss": "连接前后动作，可表承接。",
+          "pos": "连词",
+          "example": "温故而知新，可以为师矣。",
+          "translation": "温习旧的知识并获得新的理解，就可以做老师了。",
+          "source": "《论语·为政》2.11"
+        }
+      ]
+    },
+    {
+      "id": "gu",
+      "headword": "故",
+      "pinyin": "gù",
+      "summary": "旧的事物或知识；原因等。",
+      "senses": [
+        {
+          "id": "gu-old",
+          "gloss": "旧的知识、已经学过的内容。",
+          "pos": "名词",
+          "example": "温故而知新，可以为师矣。",
+          "translation": "温习旧的知识并获得新的理解，就可以做老师了。",
+          "source": "《论语·为政》2.11"
+        }
+      ]
+    },
+    {
+      "id": "zhi-know",
+      "headword": "知",
+      "pinyin": "zhī",
+      "summary": "知道，了解，理解。",
+      "senses": [
+        {
+          "id": "zhi-know-understand",
+          "gloss": "知道、了解。",
+          "pos": "动词",
+          "example": "知之为知之，不知为不知，是知也。",
+          "translation": "知道就承认知道，不知道就承认不知道，这才是明智的。",
+          "source": "《论语·为政》2.17"
+        }
+      ]
+    },
+    {
+      "id": "you",
+      "headword": "有",
+      "pinyin": "yǒu",
+      "summary": "具有，存在。",
+      "senses": [
+        {
+          "id": "you-basic",
+          "gloss": "具有，存在。",
+          "pos": "随语境辨析",
+          "example": "有朋自远方来，不亦乐乎？",
+          "translation": "有朋友从远方来到，不也令人快乐吗？",
+          "source": "《论语·学而》1.1"
+        }
+      ]
+    },
+    {
+      "id": "wu",
+      "headword": "吾",
+      "pinyin": "wú",
+      "summary": "我。",
+      "senses": [
+        {
+          "id": "wu-basic",
+          "gloss": "我。",
+          "pos": "随语境辨析",
+          "example": "吾日三省吾身。",
+          "translation": "我每天多次反省自己。",
+          "source": "《论语·学而》1.4"
+        }
+      ]
+    },
+    {
+      "id": "yu",
+      "headword": "于",
+      "pinyin": "yú",
+      "summary": "在；向；比，随语境变化。",
+      "senses": [
+        {
+          "id": "yu-basic",
+          "gloss": "在；向；比，随语境变化。",
+          "pos": "随语境辨析",
+          "example": "己所不欲，勿施于人。",
+          "translation": "自己不愿承受的事，不要施加给别人。",
+          "source": "《论语·颜渊》12.2"
+        }
+      ]
+    },
+    {
+      "id": "yan",
+      "headword": "焉",
+      "pinyin": "yān",
+      "summary": "兼词或语气词；此例可理解为“于其中”。",
+      "senses": [
+        {
+          "id": "yan-basic",
+          "gloss": "兼词或语气词；此例可理解为“于其中”。",
+          "pos": "随语境辨析",
+          "example": "三人行，必有我师焉。",
+          "translation": "几个人同行，其中一定有可以做我老师的人。",
+          "source": "《论语·述而》7.22"
+        }
+      ]
+    },
+    {
+      "id": "ze",
+      "headword": "则",
+      "pinyin": "zé",
+      "summary": "就；表示承接或条件。",
+      "senses": [
+        {
+          "id": "ze-basic",
+          "gloss": "就；表示承接或条件。",
+          "pos": "随语境辨析",
+          "example": "尽信书，则不如无书。",
+          "translation": "完全相信书上的话，还不如没有书。",
+          "source": "《孟子·尽心下》"
+        }
+      ]
+    },
+    {
+      "id": "suo",
+      "headword": "所",
+      "pinyin": "suǒ",
+      "summary": "与动词组成名词性结构。",
+      "senses": [
+        {
+          "id": "suo-basic",
+          "gloss": "与动词组成名词性结构。",
+          "pos": "随语境辨析",
+          "example": "己所不欲，勿施于人。",
+          "translation": "自己不愿承受的事，不要施加给别人。",
+          "source": "《论语·颜渊》12.2"
+        }
+      ]
+    },
+    {
+      "id": "yi-use",
+      "headword": "以",
+      "pinyin": "yǐ",
+      "summary": "用；凭借；来。",
+      "senses": [
+        {
+          "id": "yi-use-basic",
+          "gloss": "用；凭借；来。",
+          "pos": "随语境辨析",
+          "example": "静以修身，俭以养德。",
+          "translation": "以宁静来修养身心，以节俭来培养品德。",
+          "source": "诸葛亮《诫子书》"
+        }
+      ]
+    },
+    {
+      "id": "fei",
+      "headword": "非",
+      "pinyin": "fēi",
+      "summary": "不是；不。",
+      "senses": [
+        {
+          "id": "fei-basic",
+          "gloss": "不是；不。",
+          "pos": "随语境辨析",
+          "example": "非学无以广才，非志无以成学。",
+          "translation": "不学习就无法增长才干，没有志向就无法成就学业。",
+          "source": "诸葛亮《诫子书》"
+        }
+      ]
+    },
+    {
+      "id": "zhi-will",
+      "headword": "志",
+      "pinyin": "zhì",
+      "summary": "志向；意愿。",
+      "senses": [
+        {
+          "id": "zhi-will-basic",
+          "gloss": "志向；意愿。",
+          "pos": "随语境辨析",
+          "example": "非淡泊无以明志，非宁静无以致远。",
+          "translation": "不能淡泊名利就无法明确志向，不能宁静专注就无法达到远大目标。",
+          "source": "诸葛亮《诫子书》"
+        }
+      ]
+    },
+    {
+      "id": "ming",
+      "headword": "名",
+      "pinyin": "míng",
+      "summary": "出名；名称；名声。",
+      "senses": [
+        {
+          "id": "ming-basic",
+          "gloss": "出名；名称；名声。",
+          "pos": "随语境辨析",
+          "example": "山不在高，有仙则名。",
+          "translation": "山不在于高，有仙人居住就会出名。",
+          "source": "刘禹锡《陋室铭》"
+        }
+      ]
+    },
+    {
+      "id": "xin",
+      "headword": "馨",
+      "pinyin": "xīn",
+      "summary": "散布很远的香气；此例比喻品德美好。",
+      "senses": [
+        {
+          "id": "xin-basic",
+          "gloss": "散布很远的香气；此例比喻品德美好。",
+          "pos": "随语境辨析",
+          "example": "斯是陋室，惟吾德馨。",
+          "translation": "这是简陋的屋子，只因我的品德美好，便不觉得它简陋。",
+          "source": "刘禹锡《陋室铭》"
+        }
+      ]
+    },
+    {
+      "id": "hong",
+      "headword": "鸿",
+      "pinyin": "hóng",
+      "summary": "大；此例“鸿儒”指博学的人。",
+      "senses": [
+        {
+          "id": "hong-basic",
+          "gloss": "大；此例“鸿儒”指博学的人。",
+          "pos": "随语境辨析",
+          "example": "谈笑有鸿儒，往来无白丁。",
+          "translation": "在这里谈笑的是博学的人，往来的没有缺少学问的人。",
+          "source": "刘禹锡《陋室铭》"
+        }
+      ]
+    },
+    {
+      "id": "xian",
+      "headword": "鲜",
+      "pinyin": "xiǎn",
+      "summary": "少；此义读 xiǎn。",
+      "senses": [
+        {
+          "id": "xian-basic",
+          "gloss": "少；此义读 xiǎn。",
+          "pos": "随语境辨析",
+          "example": "菊之爱，陶后鲜有闻。",
+          "translation": "对于菊花的喜爱，在陶渊明之后很少听说了。",
+          "source": "周敦颐《爱莲说》"
+        }
+      ]
+    },
+    {
+      "id": "yi-more",
+      "headword": "益",
+      "pinyin": "yì",
+      "summary": "更加；增加。",
+      "senses": [
+        {
+          "id": "yi-more-basic",
+          "gloss": "更加；增加。",
+          "pos": "随语境辨析",
+          "example": "香远益清，亭亭净植。",
+          "translation": "香气远播而更加清幽，莲花洁净挺立。",
+          "source": "周敦颐《爱莲说》"
+        }
+      ]
+    },
+    {
+      "id": "zhuo",
+      "headword": "濯",
+      "pinyin": "zhuó",
+      "summary": "洗涤。",
+      "senses": [
+        {
+          "id": "zhuo-basic",
+          "gloss": "洗涤。",
+          "pos": "随语境辨析",
+          "example": "濯清涟而不妖。",
+          "translation": "在清澈的水波中洗涤，却不显得妖媚。",
+          "source": "周敦颐《爱莲说》"
+        }
+      ]
+    },
+    {
+      "id": "ju",
+      "headword": "具",
+      "pinyin": "jù",
+      "summary": "全，都。",
+      "senses": [
+        {
+          "id": "ju-basic",
+          "gloss": "全，都。",
+          "pos": "随语境辨析",
+          "example": "政通人和，百废具兴。",
+          "translation": "政事顺畅，百姓和乐，各种荒废的事业都兴办起来。",
+          "source": "范仲淹《岳阳楼记》"
+        }
+      ]
+    },
+    {
+      "id": "qi",
+      "headword": "其",
+      "pinyin": "qí",
+      "summary": "代词；语气副词，依上下文判断。",
+      "senses": [
+        {
+          "id": "qi-basic",
+          "gloss": "代词；语气副词，依上下文判断。",
+          "pos": "随语境辨析",
+          "example": "其真无马邪？其真不知马也！",
+          "translation": "难道真的没有千里马吗？恐怕是他们真的不懂得马吧！",
+          "source": "韩愈《马说》"
+        }
+      ]
+    },
+    {
+      "id": "ce",
+      "headword": "策",
+      "pinyin": "cè",
+      "summary": "马鞭；用鞭驱赶。",
+      "senses": [
+        {
+          "id": "ce-basic",
+          "gloss": "马鞭；用鞭驱赶。",
+          "pos": "随语境辨析",
+          "example": "策之不以其道，食之不能尽其材。",
+          "translation": "不按正确方法驱使它，喂养它又不能使它充分发挥才能。",
+          "source": "韩愈《马说》"
+        }
+      ]
+    },
+    {
+      "id": "hu",
+      "headword": "乎",
+      "pinyin": "hū",
+      "summary": "语气词；介词，相当于“于”。",
+      "senses": [
+        {
+          "id": "hu-basic",
+          "gloss": "语气词；介词，相当于“于”。",
+          "pos": "随语境辨析",
+          "example": "醉翁之意不在酒，在乎山水之间也。",
+          "translation": "醉翁的情趣不在酒上，而在山水之间。",
+          "source": "欧阳修《醉翁亭记》"
+        }
+      ]
+    },
+    {
+      "id": "le",
+      "headword": "乐",
+      "pinyin": "lè",
+      "summary": "快乐；以……为乐。",
+      "senses": [
+        {
+          "id": "le-basic",
+          "gloss": "快乐；以……为乐。",
+          "pos": "随语境辨析",
+          "example": "先天下之忧而忧，后天下之乐而乐。",
+          "translation": "在天下人忧愁之前先忧愁，在天下人快乐之后才快乐。",
+          "source": "范仲淹《岳阳楼记》"
+        }
+      ]
+    },
+    {
+      "id": "nai",
+      "headword": "乃",
+      "pinyin": "nǎi",
+      "summary": "于是，才；竟然。",
+      "senses": [
+        {
+          "id": "nai-basic",
+          "gloss": "于是，才；竟然。",
+          "pos": "随语境辨析",
+          "example": "乃不知有汉，无论魏晋。",
+          "translation": "竟然不知道有过汉朝，更不必说魏朝和晋朝了。",
+          "source": "陶渊明《桃花源记》"
+        }
+      ]
+    },
+    {
+      "id": "gou",
+      "headword": "苟",
+      "pinyin": "gǒu",
+      "summary": "如果；苟且。",
+      "senses": [
+        {
+          "id": "gou-basic",
+          "gloss": "如果；苟且。",
+          "pos": "随语境辨析",
+          "example": "苟全性命于乱世，不求闻达于诸侯。",
+          "translation": "只求在乱世中保全性命，不求在诸侯中扬名显达。",
+          "source": "诸葛亮《出师表》"
+        }
+      ]
+    },
+    {
+      "id": "bi",
+      "headword": "鄙",
+      "pinyin": "bǐ",
+      "summary": "见识短浅；边远。",
+      "senses": [
+        {
+          "id": "bi-basic",
+          "gloss": "见识短浅；边远。",
+          "pos": "随语境辨析",
+          "example": "肉食者鄙，未能远谋。",
+          "translation": "那些身居高位的人见识短浅，不能作长远谋划。",
+          "source": "《左传·庄公十年》曹刿论战"
+        }
+      ]
+    },
+    {
+      "id": "jie",
+      "headword": "竭",
+      "pinyin": "jié",
+      "summary": "尽，枯竭。",
+      "senses": [
+        {
+          "id": "jie-basic",
+          "gloss": "尽，枯竭。",
+          "pos": "随语境辨析",
+          "example": "一鼓作气，再而衰，三而竭。",
+          "translation": "第一次击鼓能振作士气，第二次士气便衰弱，第三次就耗尽了。",
+          "source": "《左传·庄公十年》曹刿论战"
+        }
+      ]
+    }
   ],
   "passages": [
-    {"id":"p1","original":"学而时习之，不亦说乎？","translation":"学习后时常温习所学的内容，不也令人愉快吗？","direction":"CLASSICAL_TO_ZH","work":"《论语·学而》1.1","analysis":"这句话强调学习与温习相互配合的乐趣。“之”代指所学的内容；“说”读 yuè，通“悦”。“不亦……乎”构成反问语气。","entryIds":["xue","er","shi","xi","zhi","yue"]},
-    {"id":"p2","original":"温故而知新，可以为师矣。","translation":"温习旧的知识并获得新的理解，就可以做老师了。","direction":"CLASSICAL_TO_ZH","work":"《论语·为政》2.11","analysis":"“故”指旧的知识，“新”指新的认识。“温故”与“知新”连接，强调在复习中获得理解。","entryIds":["gu","er","zhi-know"]},
-    {"id":"p3","original":"学而不思则罔，思而不学则殆。","translation":"学习却不思考就会迷惑，思考却不学习就会疑惑。","direction":"CLASSICAL_TO_ZH","work":"《论语·为政》2.15","analysis":"前后两句形成对照，说明学习和思考需要相互配合。“而”在这里表示转折关系。","entryIds":["xue","er"]},
-    {"id":"p4","original":"人不知而不愠，不亦君子乎？","translation":"别人不了解自己，自己却不恼怒，不也是有修养的人吗？","direction":"CLASSICAL_TO_ZH","work":"《论语·学而》1.1","analysis":"“愠”是恼怒。“而”表示转折，“不亦……乎”用反问表达肯定。","entryIds":["zhi-know","er"]},
-    {"id":"p5","original":"知之为知之，不知为不知，是知也。","translation":"知道就承认知道，不知道就承认不知道，这才是明智的。","direction":"CLASSICAL_TO_ZH","work":"《论语·为政》2.17","analysis":"前面的“知”表示知道，两个“之”为代词。末尾“知”传统上常解释为通“智”，表示明智。","entryIds":["zhi-know","zhi"]},
-    {"id":"p6","original":"夫子之道，忠恕而已矣。","translation":"老师的道，不过是忠与恕罢了。","direction":"CLASSICAL_TO_ZH","work":"《论语·里仁》4.15","analysis":"“夫子”在这里指孔子；“之”连接定语与中心语，相当于“的”。","entryIds":["zhi","er"]},
-    {"id":"p7","original":"吾欲之南海，何如？","translation":"我想前往南海，你觉得怎样？","direction":"CLASSICAL_TO_ZH","work":"彭端淑《为学一首示子侄》","analysis":"“吾”意为我，“欲”意为想要。“之”后面接地点“南海”，在这里是动词，意为前往。","entryIds":["zhi"]},
-    {"id":"p8","original":"予独爱莲之出淤泥而不染。","translation":"我唯独喜爱莲花从淤泥中生长出来，却不沾染污秽。","direction":"CLASSICAL_TO_ZH","work":"周敦颐《爱莲说》","analysis":"“之”用于“莲”与“出淤泥而不染”之间，使整个结构成为“爱”的对象。“而”表示转折。","entryIds":["zhi","er"]},
-    {"id":"b1","original":"你好。","translation":"Hello.","direction":"ZH_TO_EN","work":"项目原创双语示例","analysis":"日常问候语。此例仅演示本地双语对照，不代表任意中英文翻译能力。","entryIds":[]},
-    {"id":"b2","original":"温故知新。","translation":"Review what you have learned to gain new insights.","direction":"ZH_TO_EN","work":"项目原创双语示例","analysis":"表达通过温习已有知识来获得新理解。","entryIds":[]}
+    {
+      "id": "p1",
+      "original": "学而时习之，不亦说乎？",
+      "translation": "学习后时常温习所学的内容，不也令人愉快吗？",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·学而》1.1",
+      "analysis": "这句话强调学习与温习相互配合的乐趣。“之”代指所学的内容；“说”读 yuè，通“悦”。“不亦……乎”构成反问语气。",
+      "entryIds": [
+        "xue",
+        "er",
+        "shi",
+        "xi",
+        "zhi",
+        "yue"
+      ]
+    },
+    {
+      "id": "p2",
+      "original": "温故而知新，可以为师矣。",
+      "translation": "温习旧的知识并获得新的理解，就可以做老师了。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·为政》2.11",
+      "analysis": "“故”指旧的知识，“新”指新的认识。“温故”与“知新”连接，强调在复习中获得理解。",
+      "entryIds": [
+        "gu",
+        "er",
+        "zhi-know"
+      ]
+    },
+    {
+      "id": "p3",
+      "original": "学而不思则罔，思而不学则殆。",
+      "translation": "学习却不思考就会迷惑，思考却不学习就会疑惑。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·为政》2.15",
+      "analysis": "前后两句形成对照，说明学习和思考需要相互配合。“而”在这里表示转折关系。",
+      "entryIds": [
+        "xue",
+        "er"
+      ]
+    },
+    {
+      "id": "p4",
+      "original": "人不知而不愠，不亦君子乎？",
+      "translation": "别人不了解自己，自己却不恼怒，不也是有修养的人吗？",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·学而》1.1",
+      "analysis": "“愠”是恼怒。“而”表示转折，“不亦……乎”用反问表达肯定。",
+      "entryIds": [
+        "zhi-know",
+        "er"
+      ]
+    },
+    {
+      "id": "p5",
+      "original": "知之为知之，不知为不知，是知也。",
+      "translation": "知道就承认知道，不知道就承认不知道，这才是明智的。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·为政》2.17",
+      "analysis": "前面的“知”表示知道，两个“之”为代词。末尾“知”传统上常解释为通“智”，表示明智。",
+      "entryIds": [
+        "zhi-know",
+        "zhi"
+      ]
+    },
+    {
+      "id": "p6",
+      "original": "夫子之道，忠恕而已矣。",
+      "translation": "老师的道，不过是忠与恕罢了。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·里仁》4.15",
+      "analysis": "“夫子”在这里指孔子；“之”连接定语与中心语，相当于“的”。",
+      "entryIds": [
+        "zhi",
+        "er"
+      ]
+    },
+    {
+      "id": "p7",
+      "original": "吾欲之南海，何如？",
+      "translation": "我想前往南海，你觉得怎样？",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "彭端淑《为学一首示子侄》",
+      "analysis": "“吾”意为我，“欲”意为想要。“之”后面接地点“南海”，在这里是动词，意为前往。",
+      "entryIds": [
+        "zhi"
+      ]
+    },
+    {
+      "id": "p8",
+      "original": "予独爱莲之出淤泥而不染。",
+      "translation": "我唯独喜爱莲花从淤泥中生长出来，却不沾染污秽。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "周敦颐《爱莲说》",
+      "analysis": "“之”用于“莲”与“出淤泥而不染”之间，使整个结构成为“爱”的对象。“而”表示转折。",
+      "entryIds": [
+        "zhi",
+        "er"
+      ]
+    },
+    {
+      "id": "b1",
+      "original": "你好。",
+      "translation": "Hello.",
+      "direction": "ZH_TO_EN",
+      "work": "项目原创双语示例",
+      "analysis": "日常问候语。此例仅演示本地双语对照，不代表任意中英文翻译能力。",
+      "entryIds": []
+    },
+    {
+      "id": "b2",
+      "original": "温故知新。",
+      "translation": "Review what you have learned to gain new insights.",
+      "direction": "ZH_TO_EN",
+      "work": "项目原创双语示例",
+      "analysis": "表达通过温习已有知识来获得新理解。",
+      "entryIds": []
+    },
+    {
+      "id": "common-p1",
+      "original": "有朋自远方来，不亦乐乎？",
+      "translation": "有朋友从远方来到，不也令人快乐吗？",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·学而》1.1",
+      "analysis": "名词“朋”作“有”的宾语；“自”表示从。",
+      "entryIds": [
+        "you"
+      ]
+    },
+    {
+      "id": "common-p2",
+      "original": "吾日三省吾身。",
+      "translation": "我每天多次反省自己。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·学而》1.4",
+      "analysis": "“日”表示每天，“三”在这里通常理解为多次。",
+      "entryIds": [
+        "wu"
+      ]
+    },
+    {
+      "id": "common-p3",
+      "original": "己所不欲，勿施于人。",
+      "translation": "自己不愿承受的事，不要施加给别人。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·颜渊》12.2",
+      "analysis": "“所不欲”指自己不愿意的事情；“于”引出施加的对象。",
+      "entryIds": [
+        "yu"
+      ]
+    },
+    {
+      "id": "common-p4",
+      "original": "三人行，必有我师焉。",
+      "translation": "几个人同行，其中一定有可以做我老师的人。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《论语·述而》7.22",
+      "analysis": "“三人”泛指多人；“焉”可理解为在其中。",
+      "entryIds": [
+        "you",
+        "yan"
+      ]
+    },
+    {
+      "id": "common-p5",
+      "original": "尽信书，则不如无书。",
+      "translation": "完全相信书上的话，还不如没有书。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《孟子·尽心下》",
+      "analysis": "“尽”表示全、完全；句子提醒读者要有辨别和思考。",
+      "entryIds": [
+        "ze"
+      ]
+    },
+    {
+      "id": "common-p7",
+      "original": "静以修身，俭以养德。",
+      "translation": "以宁静来修养身心，以节俭来培养品德。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "诸葛亮《诫子书》",
+      "analysis": "“以”在这里表示目的，可以译为“来”。",
+      "entryIds": [
+        "yi-use"
+      ]
+    },
+    {
+      "id": "common-p8",
+      "original": "非学无以广才，非志无以成学。",
+      "translation": "不学习就无法增长才干，没有志向就无法成就学业。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "诸葛亮《诫子书》",
+      "analysis": "“无以”表示没有用来做某事的办法；“广”表示增长。",
+      "entryIds": [
+        "xue",
+        "yi-use",
+        "fei"
+      ]
+    },
+    {
+      "id": "common-p9",
+      "original": "非淡泊无以明志，非宁静无以致远。",
+      "translation": "不能淡泊名利就无法明确志向，不能宁静专注就无法达到远大目标。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "诸葛亮《诫子书》",
+      "analysis": "“明志”是明确志向，“致远”是达到远大目标。“淡泊”亦有“澹泊”写法。",
+      "entryIds": [
+        "yi-use",
+        "fei",
+        "zhi-will"
+      ]
+    },
+    {
+      "id": "common-p10",
+      "original": "山不在高，有仙则名。",
+      "translation": "山不在于高，有仙人居住就会出名。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "刘禹锡《陋室铭》",
+      "analysis": "“名”在这里用作动词，意为出名；“则”表示就。",
+      "entryIds": [
+        "you",
+        "ze",
+        "ming"
+      ]
+    },
+    {
+      "id": "common-p11",
+      "original": "斯是陋室，惟吾德馨。",
+      "translation": "这是简陋的屋子，只因我的品德美好，便不觉得它简陋。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "刘禹锡《陋室铭》",
+      "analysis": "“斯”表示这，“惟”表示只。“馨”用香气比喻德行。",
+      "entryIds": [
+        "wu",
+        "xin"
+      ]
+    },
+    {
+      "id": "common-p12",
+      "original": "谈笑有鸿儒，往来无白丁。",
+      "translation": "在这里谈笑的是博学的人，往来的没有缺少学问的人。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "刘禹锡《陋室铭》",
+      "analysis": "“白丁”在本文中与“鸿儒”相对，指没有学问的人。",
+      "entryIds": [
+        "you",
+        "hong"
+      ]
+    },
+    {
+      "id": "common-p13",
+      "original": "菊之爱，陶后鲜有闻。",
+      "translation": "对于菊花的喜爱，在陶渊明之后很少听说了。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "周敦颐《爱莲说》",
+      "analysis": "“菊之爱”可理解为对菊花的喜爱；“鲜”表示少。",
+      "entryIds": [
+        "zhi",
+        "you",
+        "xian"
+      ]
+    },
+    {
+      "id": "common-p14",
+      "original": "香远益清，亭亭净植。",
+      "translation": "香气远播而更加清幽，莲花洁净挺立。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "周敦颐《爱莲说》",
+      "analysis": "“益”表示更加，“植”在此表示立。",
+      "entryIds": [
+        "yi-more"
+      ]
+    },
+    {
+      "id": "common-p15",
+      "original": "濯清涟而不妖。",
+      "translation": "在清澈的水波中洗涤，却不显得妖媚。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "周敦颐《爱莲说》",
+      "analysis": "“清涟”指清澈的水波，“而”表示转折。",
+      "entryIds": [
+        "er",
+        "zhuo"
+      ]
+    },
+    {
+      "id": "common-p16",
+      "original": "政通人和，百废具兴。",
+      "translation": "政事顺畅，百姓和乐，各种荒废的事业都兴办起来。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "范仲淹《岳阳楼记》",
+      "analysis": "“具”通“俱”，表示全、都；“百废”指各种荒废的事业。",
+      "entryIds": [
+        "ju"
+      ]
+    },
+    {
+      "id": "common-p17",
+      "original": "其真无马邪？其真不知马也！",
+      "translation": "难道真的没有千里马吗？恐怕是他们真的不懂得马吧！",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "韩愈《马说》",
+      "analysis": "前一个“其”表示反问，后一个“其”表示推测。",
+      "entryIds": [
+        "zhi-know",
+        "qi"
+      ]
+    },
+    {
+      "id": "common-p18",
+      "original": "策之不以其道，食之不能尽其材。",
+      "translation": "不按正确方法驱使它，喂养它又不能使它充分发挥才能。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "韩愈《马说》",
+      "analysis": "“策”在此作动词；“食”读 sì，表示喂养；“材”通“才”。",
+      "entryIds": [
+        "zhi",
+        "yi-use",
+        "qi",
+        "ce"
+      ]
+    },
+    {
+      "id": "common-p19",
+      "original": "醉翁之意不在酒，在乎山水之间也。",
+      "translation": "醉翁的情趣不在酒上，而在山水之间。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "欧阳修《醉翁亭记》",
+      "analysis": "“意”指情趣，“乎”在此相当于“于”。",
+      "entryIds": [
+        "zhi",
+        "hu"
+      ]
+    },
+    {
+      "id": "common-p20",
+      "original": "先天下之忧而忧，后天下之乐而乐。",
+      "translation": "在天下人忧愁之前先忧愁，在天下人快乐之后才快乐。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "范仲淹《岳阳楼记》",
+      "analysis": "“先”“后”表达先于和后于；句子体现忧乐观。",
+      "entryIds": [
+        "zhi",
+        "er",
+        "le"
+      ]
+    },
+    {
+      "id": "common-p21",
+      "original": "乃不知有汉，无论魏晋。",
+      "translation": "竟然不知道有过汉朝，更不必说魏朝和晋朝了。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "陶渊明《桃花源记》",
+      "analysis": "“乃”在此表示竟然；“无论”是更不必说，不是现代汉语的连词。",
+      "entryIds": [
+        "zhi-know",
+        "you",
+        "nai"
+      ]
+    },
+    {
+      "id": "common-p22",
+      "original": "黄发垂髫，并怡然自乐。",
+      "translation": "老人和孩子，都悠然自得地快乐着。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "陶渊明《桃花源记》",
+      "analysis": "本句的“并”与“俱”都有“都”的意思；“黄发”“垂髫”分别借指老人和孩子。",
+      "entryIds": [
+        "le"
+      ]
+    },
+    {
+      "id": "common-p23",
+      "original": "苟全性命于乱世，不求闻达于诸侯。",
+      "translation": "只求在乱世中保全性命，不求在诸侯中扬名显达。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "诸葛亮《出师表》",
+      "analysis": "“苟全”在此是苟且保全；不能把“苟”一律译为如果。",
+      "entryIds": [
+        "yu",
+        "gou"
+      ]
+    },
+    {
+      "id": "common-p24",
+      "original": "肉食者鄙，未能远谋。",
+      "translation": "那些身居高位的人见识短浅，不能作长远谋划。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《左传·庄公十年》曹刿论战",
+      "analysis": "“肉食者”指居高位享厚禄的人；“鄙”指见识短浅。",
+      "entryIds": [
+        "bi"
+      ]
+    },
+    {
+      "id": "common-p25",
+      "original": "一鼓作气，再而衰，三而竭。",
+      "translation": "第一次击鼓能振作士气，第二次士气便衰弱，第三次就耗尽了。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "《左传·庄公十年》曹刿论战",
+      "analysis": "“再”指第二次，不是又一次；“三”指第三次。",
+      "entryIds": [
+        "er",
+        "jie"
+      ]
+    },
+    {
+      "id": "common-p26",
+      "original": "不以物喜，不以己悲。",
+      "translation": "不因外物的好坏而欣喜，也不因个人的得失而悲伤。",
+      "direction": "CLASSICAL_TO_ZH",
+      "work": "范仲淹《岳阳楼记》",
+      "analysis": "“以”表示因为；两句互文，表现不随外物和个人得失而动的心境。",
+      "entryIds": [
+        "yi-use"
+      ]
+    }
   ],
   "questions": [
-    {"id":"q1","stem":"“学而时习之”中的“之”指什么？","options":["所学的内容","前往的地方","学习的时间","老师"],"answer":0,"explanation":"这里的“之”是代词，代指前文提到的所学内容。出处：《论语·学而》1.1。","entryId":"zhi"},
-    {"id":"q2","stem":"下列哪句中的“之”是动词，意为“前往”？","options":["学而时习之","夫子之道","吾欲之南海","莲之出淤泥而不染"],"answer":2,"explanation":"“之南海”表示前往南海；“之”后面接地点，作动词。出处：彭端淑《为学一首示子侄》。","entryId":"zhi"},
-    {"id":"q3","stem":"“夫子之道”中的“之”相当于现代汉语的哪个词？","options":["它","的","到","却"],"answer":1,"explanation":"“之”连接“夫子”与“道”，相当于“的”。出处：《论语·里仁》4.15。","entryId":"zhi"},
-    {"id":"q4","stem":"“莲之出淤泥而不染”中的“之”有什么作用？","options":["表示去往某地","代指莲花","表示转折","取消句子独立性"],"answer":3,"explanation":"“之”用于主语“莲”与谓语之间，使这一结构成为句子成分。出处：周敦颐《爱莲说》。","entryId":"zhi"},
-    {"id":"q5","stem":"“不亦说乎”中的“说”应读作什么？","options":["shuō","shuì","yuè","tuō"],"answer":2,"explanation":"此处“说”通“悦”，读 yuè，表示愉快。出处：《论语·学而》1.1。","entryId":"yue"},
-    {"id":"q6","stem":"“温故而知新”中的“故”指什么？","options":["所以","旧的知识","朋友","故乡"],"answer":1,"explanation":"“故”在此处指已经学过的旧知识。出处：《论语·为政》2.11。","entryId":"gu"},
-    {"id":"q7","stem":"“学而时习之”中的“习”最合适的解释是？","options":["温习、练习","习惯","飞行","停止"],"answer":0,"explanation":"“习”在这里表示反复温习、练习所学。出处：《论语·学而》1.1。","entryId":"xi"},
-    {"id":"q8","stem":"“人不知而不愠”中的“而”表示什么关系？","options":["并列","因果","转折","假设"],"answer":2,"explanation":"别人不了解自己，自己却不恼怒。“而”连接前后，表示转折。出处：《论语·学而》1.1。","entryId":"er"},
-    {"id":"q9","stem":"“学而时习之”中的“时”如何理解？","options":["时常、按一定的时候","当时的人","一个时辰","季节"],"answer":0,"explanation":"“时”在这里作副词，表示按一定的时候、时常。出处：《论语·学而》1.1。","entryId":"shi"},
-    {"id":"q10","stem":"“学而不思则罔，思而不学则殆”强调什么？","options":["只需思考","只需记忆","不必学习","学习与思考相互配合"],"answer":3,"explanation":"前后两句说明只学不思和只思不学都有不足。出处：《论语·为政》2.15。","entryId":"xue"}
+    {
+      "id": "q1",
+      "stem": "“学而时习之”中的“之”指什么？",
+      "options": [
+        "所学的内容",
+        "前往的地方",
+        "学习的时间",
+        "老师"
+      ],
+      "answer": 0,
+      "explanation": "这里的“之”是代词，代指前文提到的所学内容。出处：《论语·学而》1.1。",
+      "entryId": "zhi"
+    },
+    {
+      "id": "q2",
+      "stem": "下列哪句中的“之”是动词，意为“前往”？",
+      "options": [
+        "学而时习之",
+        "夫子之道",
+        "吾欲之南海",
+        "莲之出淤泥而不染"
+      ],
+      "answer": 2,
+      "explanation": "“之南海”表示前往南海；“之”后面接地点，作动词。出处：彭端淑《为学一首示子侄》。",
+      "entryId": "zhi"
+    },
+    {
+      "id": "q3",
+      "stem": "“夫子之道”中的“之”相当于现代汉语的哪个词？",
+      "options": [
+        "它",
+        "的",
+        "到",
+        "却"
+      ],
+      "answer": 1,
+      "explanation": "“之”连接“夫子”与“道”，相当于“的”。出处：《论语·里仁》4.15。",
+      "entryId": "zhi"
+    },
+    {
+      "id": "q4",
+      "stem": "“莲之出淤泥而不染”中的“之”有什么作用？",
+      "options": [
+        "表示去往某地",
+        "代指莲花",
+        "表示转折",
+        "取消句子独立性"
+      ],
+      "answer": 3,
+      "explanation": "“之”用于主语“莲”与谓语之间，使这一结构成为句子成分。出处：周敦颐《爱莲说》。",
+      "entryId": "zhi"
+    },
+    {
+      "id": "q5",
+      "stem": "“不亦说乎”中的“说”应读作什么？",
+      "options": [
+        "shuō",
+        "shuì",
+        "yuè",
+        "tuō"
+      ],
+      "answer": 2,
+      "explanation": "此处“说”通“悦”，读 yuè，表示愉快。出处：《论语·学而》1.1。",
+      "entryId": "yue"
+    },
+    {
+      "id": "q6",
+      "stem": "“温故而知新”中的“故”指什么？",
+      "options": [
+        "所以",
+        "旧的知识",
+        "朋友",
+        "故乡"
+      ],
+      "answer": 1,
+      "explanation": "“故”在此处指已经学过的旧知识。出处：《论语·为政》2.11。",
+      "entryId": "gu"
+    },
+    {
+      "id": "q7",
+      "stem": "“学而时习之”中的“习”最合适的解释是？",
+      "options": [
+        "温习、练习",
+        "习惯",
+        "飞行",
+        "停止"
+      ],
+      "answer": 0,
+      "explanation": "“习”在这里表示反复温习、练习所学。出处：《论语·学而》1.1。",
+      "entryId": "xi"
+    },
+    {
+      "id": "q8",
+      "stem": "“人不知而不愠”中的“而”表示什么关系？",
+      "options": [
+        "并列",
+        "因果",
+        "转折",
+        "假设"
+      ],
+      "answer": 2,
+      "explanation": "别人不了解自己，自己却不恼怒。“而”连接前后，表示转折。出处：《论语·学而》1.1。",
+      "entryId": "er"
+    },
+    {
+      "id": "q9",
+      "stem": "“学而时习之”中的“时”如何理解？",
+      "options": [
+        "时常、按一定的时候",
+        "当时的人",
+        "一个时辰",
+        "季节"
+      ],
+      "answer": 0,
+      "explanation": "“时”在这里作副词，表示按一定的时候、时常。出处：《论语·学而》1.1。",
+      "entryId": "shi"
+    },
+    {
+      "id": "q10",
+      "stem": "“学而不思则罔，思而不学则殆”强调什么？",
+      "options": [
+        "只需思考",
+        "只需记忆",
+        "不必学习",
+        "学习与思考相互配合"
+      ],
+      "answer": 3,
+      "explanation": "前后两句说明只学不思和只思不学都有不足。出处：《论语·为政》2.15。",
+      "entryId": "xue"
+    },
+    {
+      "id": "common-q1",
+      "stem": "在“有朋自远方来，不亦乐乎？”中，“有”的恰当理解是？",
+      "options": [
+        "朋友的名字",
+        "具有，存在。",
+        "只有，唯独",
+        "通“又”，表示重复"
+      ],
+      "answer": 1,
+      "explanation": "名词“朋”作“有”的宾语；“自”表示从。 具有，存在。 出处：《论语·学而》1.1",
+      "entryId": "you"
+    },
+    {
+      "id": "common-q2",
+      "stem": "在“吾日三省吾身。”中，“吾”的恰当理解是？",
+      "options": [
+        "你，你们",
+        "他，他们",
+        "我。",
+        "我们两人"
+      ],
+      "answer": 2,
+      "explanation": "“日”表示每天，“三”在这里通常理解为多次。 我。 出处：《论语·学而》1.4",
+      "entryId": "wu"
+    },
+    {
+      "id": "common-q3",
+      "stem": "在“己所不欲，勿施于人。”中，“于”的恰当理解是？",
+      "options": [
+        "因为",
+        "于是",
+        "代指前文的事情",
+        "向，引出施加的对象。"
+      ],
+      "answer": 3,
+      "explanation": "“所不欲”指自己不愿意的事情；“于”引出施加的对象。 在；向；比，随语境变化。 出处：《论语·颜渊》12.2",
+      "entryId": "yu"
+    },
+    {
+      "id": "common-q4",
+      "stem": "在“三人行，必有我师焉。”中，“焉”的恰当理解是？",
+      "options": [
+        "于其中，在其中。",
+        "怎么，哪里",
+        "仅用于句末的感叹",
+        "代指说话的人"
+      ],
+      "answer": 0,
+      "explanation": "“三人”泛指多人；“焉”可理解为在其中。 兼词或语气词；此例可理解为“于其中”。 出处：《论语·述而》7.22",
+      "entryId": "yan"
+    },
+    {
+      "id": "common-q5",
+      "stem": "在“尽信书，则不如无书。”中，“则”的恰当理解是？",
+      "options": [
+        "取法，效法",
+        "就；表示承接或条件。",
+        "规则，准则",
+        "但是，然而"
+      ],
+      "answer": 1,
+      "explanation": "“尽”表示全、完全；句子提醒读者要有辨别和思考。 就；表示承接或条件。 出处：《孟子·尽心下》",
+      "entryId": "ze"
+    },
+    {
+      "id": "common-q6",
+      "stem": "在“己所不欲，勿施于人。”中，“所”的恰当理解是？",
+      "options": [
+        "表示转折关系",
+        "地方，处所",
+        "与动词组成名词性结构。",
+        "居住的房屋"
+      ],
+      "answer": 2,
+      "explanation": "“所”与“不欲”构成名词性结构，表示不愿承受的事情。 与动词组成名词性结构。 出处：《论语·颜渊》12.2",
+      "entryId": "suo"
+    },
+    {
+      "id": "common-q7",
+      "stem": "在“静以修身，俭以养德。”中，“以”的恰当理解是？",
+      "options": [
+        "因为宁静的缘故",
+        "已经完成",
+        "认为宁静是错误的",
+        "来，表示目的。"
+      ],
+      "answer": 3,
+      "explanation": "“以”在这里表示目的，可以译为“来”。 用；凭借；来。 出处：诸葛亮《诫子书》",
+      "entryId": "yi-use"
+    },
+    {
+      "id": "common-q8",
+      "stem": "在“非学无以广才，非志无以成学。”中，“非”的恰当理解是？",
+      "options": [
+        "不是；不。",
+        "非常，十分",
+        "非难，责备别人",
+        "飞翔"
+      ],
+      "answer": 0,
+      "explanation": "“无以”表示没有用来做某事的办法；“广”表示增长。 不是；不。 出处：诸葛亮《诫子书》",
+      "entryId": "fei"
+    },
+    {
+      "id": "common-q9",
+      "stem": "在“非淡泊无以明志，非宁静无以致远。”中，“志”的恰当理解是？",
+      "options": [
+        "志怪故事",
+        "志向；意愿。",
+        "记载，记录",
+        "标记，记号"
+      ],
+      "answer": 1,
+      "explanation": "“明志”是明确志向，“致远”是达到远大目标。“淡泊”亦有“澹泊”写法。 志向；意愿。 出处：诸葛亮《诫子书》",
+      "entryId": "zhi-will"
+    },
+    {
+      "id": "common-q10",
+      "stem": "在“山不在高，有仙则名。”中，“名”的恰当理解是？",
+      "options": [
+        "命令",
+        "命名这座山",
+        "出名，在这里用作动词。",
+        "姓名"
+      ],
+      "answer": 2,
+      "explanation": "“名”在这里用作动词，意为出名；“则”表示就。 出名；名称；名声。 出处：刘禹锡《陋室铭》",
+      "entryId": "ming"
+    },
+    {
+      "id": "common-q11",
+      "stem": "在“斯是陋室，惟吾德馨。”中，“馨”的恰当理解是？",
+      "options": [
+        "普通的花香",
+        "馨香的食物",
+        "山势高耸",
+        "散布很远的香气；此例比喻品德美好。"
+      ],
+      "answer": 3,
+      "explanation": "“斯”表示这，“惟”表示只。“馨”用香气比喻德行。 散布很远的香气；此例比喻品德美好。 出处：刘禹锡《陋室铭》",
+      "entryId": "xin"
+    },
+    {
+      "id": "common-q12",
+      "stem": "在“谈笑有鸿儒，往来无白丁。”中，“鸿”的恰当理解是？",
+      "options": [
+        "大；此例“鸿儒”指博学的人。",
+        "鸿雁这种鸟",
+        "一种声音",
+        "小，细微"
+      ],
+      "answer": 0,
+      "explanation": "“白丁”在本文中与“鸿儒”相对，指没有学问的人。 大；此例“鸿儒”指博学的人。 出处：刘禹锡《陋室铭》",
+      "entryId": "hong"
+    },
+    {
+      "id": "common-q13",
+      "stem": "在“菊之爱，陶后鲜有闻。”中，“鲜”的恰当理解是？",
+      "options": [
+        "刚刚发生",
+        "少；此义读 xiǎn。",
+        "新鲜，鲜美",
+        "颜色鲜艳"
+      ],
+      "answer": 1,
+      "explanation": "“菊之爱”可理解为对菊花的喜爱；“鲜”表示少。 少；此义读 xiǎn。 出处：周敦颐《爱莲说》",
+      "entryId": "xian"
+    },
+    {
+      "id": "common-q14",
+      "stem": "在“香远益清，亭亭净植。”中，“益”的恰当理解是？",
+      "options": [
+        "减少，降低",
+        "已经停止",
+        "更加；增加。",
+        "利益，益处"
+      ],
+      "answer": 2,
+      "explanation": "“益”表示更加，“植”在此表示立。 更加；增加。 出处：周敦颐《爱莲说》",
+      "entryId": "yi-more"
+    },
+    {
+      "id": "common-q15",
+      "stem": "在“濯清涟而不妖。”中，“濯”的恰当理解是？",
+      "options": [
+        "采摘",
+        "种植",
+        "观看",
+        "洗涤。"
+      ],
+      "answer": 3,
+      "explanation": "“清涟”指清澈的水波，“而”表示转折。 洗涤。 出处：周敦颐《爱莲说》",
+      "entryId": "zhuo"
+    },
+    {
+      "id": "common-q16",
+      "stem": "在“政通人和，百废具兴。”中，“具”的恰当理解是？",
+      "options": [
+        "全，都。",
+        "器具，工具",
+        "准备，备办",
+        "具体，详细"
+      ],
+      "answer": 0,
+      "explanation": "“具”通“俱”，表示全、都；“百废”指各种荒废的事业。 全，都。 出处：范仲淹《岳阳楼记》",
+      "entryId": "ju"
+    },
+    {
+      "id": "common-q17",
+      "stem": "“其真无马邪？其真不知马也！”中两个“其”的语气依次是？",
+      "options": [
+        "两个都表示如果",
+        "前一个表示反问，后一个表示推测。",
+        "两个都表示他的",
+        "两个都表示其中"
+      ],
+      "answer": 1,
+      "explanation": "前一个“其”表示反问，后一个“其”表示推测。 代词；语气副词，依上下文判断。 出处：韩愈《马说》",
+      "entryId": "qi"
+    },
+    {
+      "id": "common-q18",
+      "stem": "在“策之不以其道，食之不能尽其材。”中，“策”的恰当理解是？",
+      "options": [
+        "书册",
+        "用尺丈量",
+        "马鞭；用鞭驱赶。",
+        "计策，谋略"
+      ],
+      "answer": 2,
+      "explanation": "“策”在此作动词；“食”读 sì，表示喂养；“材”通“才”。 马鞭；用鞭驱赶。 出处：韩愈《马说》",
+      "entryId": "ce"
+    },
+    {
+      "id": "common-q19",
+      "stem": "在“醉翁之意不在酒，在乎山水之间也。”中，“乎”的恰当理解是？",
+      "options": [
+        "表示反问语气",
+        "表示感叹语气",
+        "表示推测语气",
+        "语气词；介词，相当于“于”。"
+      ],
+      "answer": 3,
+      "explanation": "“意”指情趣，“乎”在此相当于“于”。 语气词；介词，相当于“于”。 出处：欧阳修《醉翁亭记》",
+      "entryId": "hu"
+    },
+    {
+      "id": "common-q20",
+      "stem": "在“先天下之忧而忧，后天下之乐而乐。”中，“乐”的恰当理解是？",
+      "options": [
+        "快乐。",
+        "音乐，乐曲",
+        "乐器",
+        "乐工"
+      ],
+      "answer": 0,
+      "explanation": "“先”“后”表达先于和后于；句子体现忧乐观。 快乐；以……为乐。 出处：范仲淹《岳阳楼记》",
+      "entryId": "le"
+    },
+    {
+      "id": "common-q21",
+      "stem": "在“乃不知有汉，无论魏晋。”中，“乃”的恰当理解是？",
+      "options": [
+        "你的，你们的",
+        "于是，才；竟然。",
+        "于是，就",
+        "才，仅仅"
+      ],
+      "answer": 1,
+      "explanation": "“乃”在此表示竟然；“无论”是更不必说，不是现代汉语的连词。 于是，才；竟然。 出处：陶渊明《桃花源记》",
+      "entryId": "nai"
+    },
+    {
+      "id": "common-q23",
+      "stem": "在“苟全性命于乱世，不求闻达于诸侯。”中，“苟”的恰当理解是？",
+      "options": [
+        "如果能够保全",
+        "只要完成全部事业",
+        "故意舍弃性命",
+        "苟且，姑且。"
+      ],
+      "answer": 3,
+      "explanation": "“苟全”在此是苟且保全；不能把“苟”一律译为如果。 如果；苟且。 出处：诸葛亮《出师表》",
+      "entryId": "gou"
+    },
+    {
+      "id": "common-q24",
+      "stem": "在“肉食者鄙，未能远谋。”中，“鄙”的恰当理解是？",
+      "options": [
+        "见识短浅；边远。",
+        "边境地区",
+        "轻视别人",
+        "粗俗的语言"
+      ],
+      "answer": 0,
+      "explanation": "“肉食者”指居高位享厚禄的人；“鄙”指见识短浅。 见识短浅；边远。 出处：《左传·庄公十年》曹刿论战",
+      "entryId": "bi"
+    },
+    {
+      "id": "common-q25",
+      "stem": "在“一鼓作气，再而衰，三而竭。”中，“竭”的恰当理解是？",
+      "options": [
+        "鼓声响亮",
+        "尽，枯竭。",
+        "再次击鼓",
+        "停止追击"
+      ],
+      "answer": 1,
+      "explanation": "“再”指第二次，不是又一次；“三”指第三次。 尽，枯竭。 出处：《左传·庄公十年》曹刿论战",
+      "entryId": "jie"
+    }
   ]
 }

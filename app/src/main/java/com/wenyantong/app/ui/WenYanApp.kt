@@ -92,7 +92,7 @@ private val PagePadding = 24.dp
                     composable("wrong") { WrongPage(state,{nav.popBackStack()}) { vm.startPractice(emptySet(),20,true) { go("quiz") } } }
                     composable("history") { HistoryPage(state,{vm.favorite(it)},{vm.delete(it)}) { lookup(it.query,it.direction) } }
                     composable("settings") { SettingsPage(state,vm,{go(it)}) }
-                    composable("resources") { ResourcePage(state,{nav.popBackStack()}) }
+                    composable("resources") { ResourcePage(state,vm,{nav.popBackStack()},{go(it)}) }
                     composable("reading") { ReadingPage(state,vm,{nav.popBackStack()}) }
                     composable("ai") { AiPage({nav.popBackStack()}) }
                     composable("updates") { UpdatePage(state,vm) { nav.popBackStack() } }
@@ -355,7 +355,7 @@ private val PagePadding = 24.dp
         OutlinedTextField(search,{search=it},Modifier.fillMaxWidth().padding(horizontal=24.dp),placeholder={Text("查找字词或释义")},leadingIcon={Icon(Icons.Outlined.Search,null)},singleLine=true,shape=Rounded)
         val list=state.entries.filter { it.headword.contains(search) || it.summary.contains(search) || it.pinyin.contains(search,true) }
         LazyColumn(contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            item { Text("示例词典 · ${state.entries.size} 个词条",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { Text("本地词典 · ${state.entries.size} 个词条",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant) }
             items(list,key={it.id}) { e ->
                 Paper(Modifier.clickable { onEntry(e) }) {
                     Row(verticalAlignment=Alignment.CenterVertically) {
@@ -527,22 +527,41 @@ private val PagePadding = 24.dp
     }
 }
 
-@Composable private fun ResourcePage(state: AppState, back:()->Unit) {
+@Composable private fun ResourcePage(state: AppState, vm: AppViewModel, back:()->Unit, go:(String)->Unit) {
+    var consent by remember { mutableStateOf(false) }
+    var confirmImport by remember { mutableStateOf<android.net.Uri?>(null) }
+    val picker=androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri -> confirmImport=uri }
+    if(consent) AlertDialog(onDismissRequest={consent=false},title={Text("连接 GitHub 检查资源？")},text={Text("本次检查及后续下载会使用网络。学习模式保持不变。")},confirmButton={TextButton(onClick={consent=false;vm.checkResources()}) { Text("允许检查") }},dismissButton={TextButton(onClick={consent=false}){Text("取消")}})
+    confirmImport?.let { uri -> AlertDialog(onDismissRequest={confirmImport=null},title={Text("导入本地资源包？")},text={Text("仅导入可信来源的资源 ZIP。软件会校验格式与完整性，安装后替换当前基础库，保留个人学习数据。")},confirmButton={TextButton(onClick={confirmImport=null;vm.importResource(uri)}){Text("校验并导入")}},dismissButton={TextButton(onClick={confirmImport=null}){Text("取消")}}) }
     Column { PageHeader("离线资源",back)
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
-            Eyebrow("随应用内置 · 无需下载")
-            Text("没有网络，\n也可以慢慢学。",fontSize=29.sp,lineHeight=41.sp,fontFamily=FontFamily.Serif)
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
+            Eyebrow("下载一次 · 离线使用")
+            Text("把常用古文，\n留在口袋里。",fontSize=29.sp,lineHeight=41.sp,fontFamily=FontFamily.Serif)
             Paper {
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) { Text("基础示例资源",fontSize=19.sp);Tag("已安装",Icons.Outlined.Check) }
-                Text("v0.1.0 · SQLite · SHA-256 校验",fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("${state.entries.size} 个词条 · ${state.entries.sumOf { it.senses.size }} 个义项\n${state.passages.size} 组文本对照 · 10 道单选题",fontSize=16.sp,lineHeight=30.sp)
-                HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
-                Text("资源来源",fontWeight=FontWeight.Medium)
-                Text("古籍原文：《论语》、周敦颐《爱莲说》、彭端淑《为学一首示子侄》。具体篇章随条目标注。",fontSize=14.sp,lineHeight=24.sp)
-                Text("释义、译文、解析与试题：项目原创，按 CC0-1.0 提供。古籍原文为公有领域文本。示例内容未经学术审校。",fontSize=13.sp,lineHeight=23.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("常用文言文基础库",fontSize=19.sp)
+                Text("已安装 v${state.resourceVersion} · SHA-256 校验",fontSize=13.sp)
+                Text("${state.entries.size} 个词条 · ${state.entries.sumOf { it.senses.size }} 个义项\n${state.passages.size} 组文本对照 · ${state.resourceQuestions} 道单选题",fontSize=16.sp,lineHeight=28.sp)
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick={go("dictionary")}) { Text("查看词条") }
+                    OutlinedButton(onClick={go("classics")}) { Text("查看古文") }
+                }
             }
-            Text("双语示例仅含“你好。”与“温故知新。”两组对照，支持反向查询。",fontSize=13.sp,lineHeight=23.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("后续迭代：四类独立资源包、GitHub 更新、签名校验与版本回滚。当前内置示例库随应用更新。",fontSize=13.sp,lineHeight=23.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Button(onClick={if(state.mode==Mode.OFFLINE)consent=true else vm.checkResources()},enabled=!state.resourceBusy,modifier=Modifier.fillMaxWidth()) { Text("检查资源更新") }
+            state.resourceOffer?.let { offer -> Paper {
+                Text("可下载 v${offer.version}",fontSize=19.sp)
+                Text("${offer.bytes/1024} KB · ${offer.notes}",fontSize=14.sp,lineHeight=24.sp)
+                Button(onClick=vm::downloadResource,enabled=!state.resourceBusy) { Text("下载并安装资源包") }
+            } }
+            if(state.resourceBusy) {
+                LinearProgressIndicator(modifier=Modifier.fillMaxWidth())
+                if(state.resourceDownloaded>0) Text("已下载 ${state.resourceDownloaded/1024} KB")
+                TextButton(onClick=vm::cancelResource) { Text("取消") }
+            }
+            if(state.resourceMessage.isNotBlank()) Text(state.resourceMessage,fontSize=14.sp,lineHeight=24.sp)
+            OutlinedButton(onClick={picker.launch(arrayOf("application/zip","application/octet-stream","application/x-zip-compressed"))},enabled=!state.resourceBusy,modifier=Modifier.fillMaxWidth()) { Text("导入本地资源 ZIP") }
+            Text("资源说明",fontWeight=FontWeight.Medium)
+            Text("古籍原文为公有领域作品，逐条标注出处。现代释义、译文、解析和题目为项目原创（CC0-1.0）。常用篇章以节选学习为主，未经专业学术审校。双语仅提供两组示例。",fontSize=13.sp,lineHeight=23.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("资源库与应用分别更新。安装资源不删除历史、收藏及错题；下载或校验失败时继续使用原资源。",fontSize=13.sp,lineHeight=23.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

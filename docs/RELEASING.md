@@ -41,4 +41,4 @@ git push origin main
 
 安装通过受限 FileProvider 交给安卓系统。首次使用可能需要在系统中允许此应用安装软件，随后返回点“安装更新”。不进行静默安装。正常同签名覆盖升级保留 personal.db 与偏好设置。
 
-资源包在线更新是另一项后续功能，不与 APK 更新混同。
+应用 0.3.0 起资源库通过独立索引发布，不影响 APK latest。操作方法见 RESOURCE_PACK.md；本地运行 `python tools/pack-builder/publish.py`，无需 Actions。

@@ -18,6 +18,8 @@ import com.wenyantong.app.feature.storage.*
 class LocalRepository(private val context: Context) {
     private val personal = PersonalDatabase(context)
     private lateinit var resource: SQLiteDatabase
+    private val resourceLock=Any()
+    private val resourceStore=com.wenyantong.app.feature.resources.ResourceStore(context)
     private val prefs = context.getSharedPreferences("reading", Context.MODE_PRIVATE)
     lateinit var manifest: JSONObject
         private set
@@ -39,8 +41,22 @@ class LocalRepository(private val context: Context) {
             if (file.exists()) check(file.delete())
             check(temporary.renameTo(file)) { "示例资源安装失败。" }
         }
-        resource = SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
+        val installed=resourceStore.active()
+        val selected=if(installed!=null && installed.manifest.getInt("revision")>manifest.optInt("revision",0)) installed else null
+        synchronized(resourceLock) {
+            if(::resource.isInitialized) resource.close()
+            resource = SQLiteDatabase.openDatabase(selected?.let { File(it.directory,"sample.db").path } ?: file.path, null, SQLiteDatabase.OPEN_READONLY)
+            if(selected!=null) manifest=selected.manifest
+        }
         personal.writableDatabase
+    }
+
+    suspend fun installResource(prepared: com.wenyantong.app.feature.resources.PreparedResource) = withContext(Dispatchers.IO) {
+        synchronized(resourceLock) {
+            val next=SQLiteDatabase.openDatabase(File(prepared.directory,"sample.db").path,null,SQLiteDatabase.OPEN_READONLY)
+            try { resourceStore.activate(prepared) } catch(e: Exception) { next.close();throw e }
+            val old=resource;resource=next;manifest=prepared.manifest;old.close()
+        }
     }
 
     private fun hash(file: File): String {
@@ -53,7 +69,7 @@ class LocalRepository(private val context: Context) {
     }
 
     suspend fun entries(): List<Entry> = withContext(Dispatchers.IO) {
-        resource.rawQuery("SELECT id,headword,pinyin,summary FROM dict_entry ORDER BY rowid", null).use { cursor ->
+        synchronized(resourceLock) { resource.rawQuery("SELECT id,headword,pinyin,summary FROM dict_entry ORDER BY rowid", null).use { cursor ->
             buildList {
                 while (cursor.moveToNext()) {
                     val id = cursor.getString(0)
@@ -64,11 +80,13 @@ class LocalRepository(private val context: Context) {
                 }
             }
         }
+        }
     }
 
     suspend fun passages(): List<Passage> = withContext(Dispatchers.IO) {
-        resource.rawQuery("SELECT id,original,translation,direction,work,analysis,entry_ids FROM passage ORDER BY rowid", null).use { c ->
+        synchronized(resourceLock) { resource.rawQuery("SELECT id,original,translation,direction,work,analysis,entry_ids FROM passage ORDER BY rowid", null).use { c ->
             buildList { while (c.moveToNext()) add(Passage(c.getString(0),c.getString(1),c.getString(2),Direction.valueOf(c.getString(3)),c.getString(4),c.getString(5),JSONArray(c.getString(6)).strings())) }
+        }
         }
     }
 
@@ -103,11 +121,12 @@ class LocalRepository(private val context: Context) {
     suspend fun deleteHistory(id: Long) = withContext(Dispatchers.IO) { personal.writableDatabase.delete("history","id=?",arrayOf(id.toString())) }
     suspend fun questions(entryIds: Set<String> = emptySet(), wrongOnly: Boolean = false): List<Question> = withContext(Dispatchers.IO) {
         val wrongIds = wrongIds()
-        resource.rawQuery("SELECT id,stem,options_json,answer,explanation,entry_id FROM question ORDER BY rowid",null).use { c ->
+        synchronized(resourceLock) { resource.rawQuery("SELECT id,stem,options_json,answer,explanation,entry_id FROM question ORDER BY rowid",null).use { c ->
             buildList { while(c.moveToNext()) {
                 val q = Question(c.getString(0),c.getString(1),JSONArray(c.getString(2)).strings(),c.getInt(3),c.getString(4),c.getString(5))
                 if ((entryIds.isEmpty() || q.entryId in entryIds) && (!wrongOnly || q.id in wrongIds)) add(q)
             } }
+        }
         }
     }
     private fun wrongIds(): Set<String> = personal.readableDatabase.rawQuery("SELECT question_id FROM wrong_question WHERE mastered=0",null).use { c ->

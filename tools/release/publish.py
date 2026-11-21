@@ -40,6 +40,7 @@ def main():
     else:
         gradle=['sh',str(ROOT/'gradlew')]
     print('Building and signing locally; no private credentials leave this computer.',flush=True)
+    run([sys.executable,ROOT/'tools/pack-builder/build.py'])
     run([sys.executable,ROOT/'tools/pack-builder/test_resources.py'])
     run(gradle+['--no-daemon','testDebugUnitTest','lintRelease','assembleRelease'],env=env)
     sdk=env.get('ANDROID_HOME') or env.get('ANDROID_SDK_ROOT')

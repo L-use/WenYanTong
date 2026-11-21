@@ -5,10 +5,10 @@
 ## 日常迭代
 
 1. 修改代码，在 `version.properties` 同时增加 versionCode 和 versionName。versionCode 必须严格递增。
-2. 添加 `docs/releases/版本号.md` 更新说明。提交代码并等待 Android CI 通过。
+2. 添加 `docs/releases/版本号.md` 更新说明，提交代码。
 3. 运行本机发布脚本：Windows 为 `./tools/release/publish.ps1`，其他系统为 `python tools/release/publish.py`。
-4. 脚本本机测试、构建并校验签名，生成 update.json 和文件哈希，创建并推送版本标签，再等待 GitHub 的 Build release candidate 检查通过。
-5. 检查通过后，脚本上传签名 APK 与完整元数据到草稿版本，再公开为 latest。现有发布不覆盖；修正应递增版本号。
+4. 脚本在本机校验资源、运行单元测试与 lint、构建并校验签名，生成 update.json 和文件哈希，创建并推送版本标签。
+5. 本机检查通过后，直接上传签名 APK 与完整元数据到草稿版本，再公开为 latest。现有发布不覆盖；修正应递增版本号。
 
 示例：
 
@@ -21,7 +21,7 @@ git push origin main
 
 不要跳过 version.properties 或更新说明，也不要将旧 versionCode 用于新版本。应用以 versionCode 判断升级，不按字符串大小比较版本。
 
-云端执行器不可用时，可运行 `./tools/release/publish.ps1 -LocalChecksOnly`（跨平台：`python tools/release/publish.py --local-checks-only`）。此模式仍执行资源校验、单元测试、lint、正式签名与 APK 校验，只是不等待云端任务结果；不能据此声称 GitHub CI 已通过。当前首次发布采用完整本机校验，云端工作流等待执行器恢复可用。修改资源 JSON 后，应先运行资源构建器并提交生成的数据库与 manifest。
+发布全程不使用 GitHub Actions，也不等待云端任务。无需额外参数；旧的 LocalChecksOnly 参数保留兼容。修改资源 JSON 后，应先运行资源构建器并提交生成的数据库与 manifest。
 
 ## 签名身份
 
@@ -29,7 +29,7 @@ git push origin main
 
 本机私有签名材料在 `.signing/`，已被 Git 排除。请由维护者妥善保留整份私有备份；不得提交到源码仓库、发布附件或用户数据备份。
 
-签名密钥和口令只留在维护者本机，不上传 GitHub。GitHub Actions 校验资源、运行测试与 lint 并生成不带签名的候选构建；本机发布命令等待检查通过后，仅上传签名后的 APK、update.json 和 SHA256SUMS。仓库不需要签名 Secrets。
+签名密钥和口令只留在维护者本机，不上传 GitHub。所有校验和构建在本机完成，仅上传签名后的 APK、update.json 和 SHA256SUMS。仓库不需要 Actions 或签名 Secrets。
 
 其他维护电脑的本地 release 构建可设置 ANDROID_KEYSTORE_PATH、ANDROID_KEYSTORE_PASSWORD、ANDROID_KEY_ALIAS、ANDROID_KEY_PASSWORD，或提供被忽略的 `.signing/release.properties`。未配置密钥时本机发布命令会停止。需要 Python 3、Java、Android SDK、Git 和已登录的 GitHub CLI；Windows 脚本也可识别当前 Codex 自带 Python。私有签名备份需由维护者通过自己的安全方式保留，不属于用户数据备份。
 

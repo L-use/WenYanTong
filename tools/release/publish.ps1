@@ -14,6 +14,5 @@ if (-not $releasePython) {
 }
 if (-not $releasePython) { throw 'Install Python 3 or set WENYANTONG_PYTHON to its executable path.' }
 $publishArguments = @((Join-Path $PSScriptRoot 'publish.py'))
-if ($LocalChecksOnly) { $publishArguments += '--local-checks-only' }
 & $releasePython @publishArguments
 if ($LASTEXITCODE -ne 0) { throw 'Release was not published. Review the error above.' }

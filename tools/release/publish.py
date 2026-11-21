@@ -1,14 +1,12 @@
-"""One-command release: local signing, GitHub CI validation, then public APK assets.
+"""One-command release: local validation and signing, then GitHub Release assets.
 
 Private signing material is never sent to GitHub. Run from a clean main checkout.
 """
 import argparse
-import json
 import os
 import shutil
 import subprocess
 import sys
-import time
 from pathlib import Path
 from package_release import ROOT, package
 
@@ -21,7 +19,7 @@ def output(args):
 def props(path):
     return dict(line.split('=',1) for line in path.read_text(encoding='utf-8').splitlines() if '=' in line and not line.startswith('#'))
 
-def main(local_checks_only=False):
+def main():
     version=props(ROOT/'version.properties')
     repository=version['updateRepository']
     tag='v'+version['versionName']
@@ -61,21 +59,7 @@ def main(local_checks_only=False):
         raise SystemExit('Tag already points to another commit; choose a new version')
     run(['git','push','origin','main'])
     run(['git','push','origin',tag])
-    if local_checks_only:
-        print('Using complete local verification; no cloud CI result is claimed.',flush=True)
-    else:
-        print('Waiting for GitHub release-candidate checks...',flush=True)
-        deadline=time.monotonic()+1200
-        while time.monotonic()<deadline:
-            jobs=json.loads(output(['gh','run','list','--repo',repository,'--workflow','release.yml','--commit',sha,'--limit','20','--json','databaseId,status,conclusion,headBranch,event']))
-            jobs=[job for job in jobs if job['event']=='push']
-            if jobs:
-                job=jobs[0]
-                if job['status']=='completed':
-                    if job['conclusion']!='success': raise SystemExit(f'GitHub checks failed; inspect run {job["databaseId"]}. For unavailable runners, use --local-checks-only after reviewing the cause.')
-                    break
-            time.sleep(10)
-        else: raise SystemExit('GitHub checks did not finish in time; rerun this command after they finish')
+    print('Local verification passed; publishing directly to GitHub Releases.',flush=True)
     assets=ROOT/'dist/release'
     run(['gh','release','create',tag,assets/f'WenYanTong-{version["versionName"]}.apk',assets/'update.json',assets/'SHA256SUMS',
          '--repo',repository,'--verify-tag','--draft','--title',f'文言通 {version["versionName"]}',
@@ -85,5 +69,6 @@ def main(local_checks_only=False):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--local-checks-only',action='store_true',help='Run all local checks without requiring a cloud CI result')
-    main(parser.parse_args().local_checks_only)
+    parser.add_argument('--local-checks-only',action='store_true',help=argparse.SUPPRESS)
+    parser.parse_args()
+    main()
